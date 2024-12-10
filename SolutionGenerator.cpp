@@ -31,93 +31,87 @@ std::string GenerateGuid()
 
 
 
-std::string CreateRepository( std::string const& repositoryName,
-                              std::string const& solutionName,
-                              std::string const& projectName,
-                              bool const pch,
-                              bool const vcpkg,
-                              bool const lib,
-                              bool const window )
-{
-    if ( fs::exists( repositoryName ) == false && fs::create_directory( repositoryName ) == false )
-            return "Could not create repository folder\n";
-    
-    if ( fs::exists( repositoryName + "/src" ) ) return "There is already a Solution Generated repository named " + repositoryName + "\n";
 
-    if ( fs::create_directory( repositoryName + "/bin" ) == false ) return "Could not create bin folder\n";
-    if ( fs::create_directory( repositoryName + "/config" ) == false ) return "Could not create config folder\n";
-    if ( fs::create_directory( repositoryName + "/res" ) == false ) return "Could not create res folder\n";
-    if ( fs::create_directory( repositoryName + "/src" ) == false ) return "Could not create src folder\n";
+
+
+int CreateRepository( std::string const& repositoryName,
+                      std::string const& solutionName,
+                      std::string const& projectName,
+                      bool const pch,
+                      bool const vcpkg,
+                      bool const lib,
+                      bool const window )
+{
+    ERROR_IF( fs::exists( repositoryName ) == false && fs::create_directory( repositoryName ) == false,
+              "Could not create repository folder\n" )
+
+    ERROR_IF( fs::exists( repositoryName + "/src" ),
+              "There is already a Solution Generated repository named " + repositoryName + "\n" )
+
+    ERROR_IF( fs::create_directory( repositoryName + "/bin" ) == false, "Could not create bin folder\n" )
+    ERROR_IF( fs::create_directory( repositoryName + "/config" ) == false, "Could not create config folder\n" )
+    ERROR_IF( fs::create_directory( repositoryName + "/res" ) == false, "Could not create res folder\n" )
+    ERROR_IF( fs::create_directory( repositoryName + "/src" ) == false, "Could not create src folder\n" )
 
     std::ofstream gitignore( repositoryName + "/.gitignore" );
     gitignore << "ide";
     gitignore.close();
 
-    std::cout << FG_GREEN "Repository (" + repositoryName + ") created successfully !\n" STYLE_RESET;
+    std::cout << FG_SUCCESS "Repository (" + repositoryName + ") created successfully !\n" STYLE_RESET;
 
-    if ( std::string const solutionConfigError = CreateSolutionConfig( repositoryName, solutionName );
-        solutionConfigError.empty() == false )
-        return solutionConfigError;
+    CHECK_FOR_ERROR( CreateSolutionConfig( repositoryName, solutionName ) )
 
-    std::cout << FG_GREEN "Solution (" + solutionName + ") config created successfully !\n" STYLE_RESET;
+    std::cout << FG_SUCCESS "Solution (" + solutionName + ") config created successfully !\n" STYLE_RESET;
 
-    if ( std::string const projectError = CreateProject( repositoryName, projectName, pch, vcpkg, lib, window );
-        projectError.empty() == false )
-        return projectError;
+    CHECK_FOR_ERROR( CreateProject( repositoryName, projectName, pch, vcpkg, lib, window ) )
 
-    std::cout << FG_GREEN "Project (" + projectName + ") created successfully !\n" STYLE_RESET;
+    std::cout << FG_SUCCESS "Project (" + projectName + ") created successfully !\n" STYLE_RESET;
 
-    return "";
+    return 0;
 }
 
 
 
-std::string CreateSolutionConfig( std::string const& repositoryName,
-                                  std::string const& solutionName )
+int CreateSolutionConfig( std::string const& repositoryName,
+                          std::string const& solutionName )
 {
     std::ofstream config( repositoryName + "/config/settings.json" );
     config << CONFIG_SETTINGS( solutionName, GenerateGuid() );
     config.close();
     
-    return "";
+    return 0;
 }
 
 
 
-std::string CreateProject( std::string const& repositoryName,
-                           std::string const& projectName,
-                           bool const pch,
-                           bool const vcpkg,
-                           bool const lib,
-                           bool const window )
+int CreateProject( std::string const& repositoryName,
+                   std::string const& projectName,
+                   bool const pch,
+                   bool const vcpkg,
+                   bool const lib,
+                   bool const window )
 {
-    if ( std::string const configError = CreateProjectConfig( repositoryName, projectName, pch, vcpkg, lib, window );
-        configError.empty() == false )
-        return configError;
+    CHECK_FOR_ERROR( CreateProjectConfig( repositoryName, projectName, pch, vcpkg, lib, window ) )
 
-    std::cout << FG_GREEN "  Project (" + projectName + ") config added successfully !\n" STYLE_RESET;
+    CHECK_FOR_ERROR( CreateProjectSrc( repositoryName, projectName, pch, lib, window ) )
 
-    if ( std::string const srcError = CreateProjectSrc( repositoryName, projectName, pch, lib, window );
-        srcError.empty() == false )
-        return srcError;
+    std::cout << FG_SUCCESS "  Project (" + projectName + ") src files created successfully !\n" STYLE_RESET;
 
-    std::cout << FG_GREEN "  Project (" + projectName + ") src files created successfully !\n" STYLE_RESET;
-
-    return "";
+    return 0;
 }
 
 
 
-std::string CreateProjectConfig( std::string const& repositoryName,
-                              std::string const& projectName,
-                              bool const pch,
-                              bool const vcpkg,
-                              bool const lib,
-                              bool const window )
+int CreateProjectConfig( std::string const& repositoryName,
+                         std::string const& projectName,
+                         bool const pch,
+                         bool const vcpkg,
+                         bool const lib,
+                         bool const window )
 {
-    std::string const configPath = repositoryName + "/config/";
+    std::string const settingsPath = repositoryName + "/config/settings.json";
     
-    std::ifstream settingsFileRead( configPath + "settings.json" );
+    std::ifstream settingsFileRead( settingsPath );
     nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
     settingsFileRead.close();
 
@@ -130,47 +124,65 @@ std::string CreateProjectConfig( std::string const& repositoryName,
     settingsJson["projects"][projectName]["lib"] = lib;
     settingsJson["projects"][projectName]["window"] = window;
 
-    std::ofstream settingsFileWrite( configPath + "settings.json" );
+    std::ofstream settingsFileWrite( settingsPath );
     settingsFileWrite << std::setw(4) << settingsJson;
     settingsFileWrite.close();
 
-    if ( vcpkg )
-    {
-        bool vcpkgConfigured = false;
-        
-        std::ifstream vcpkgConfigurationRead( configPath + "vcpkg-configuration.json" );
-        vcpkgConfigured = vcpkgConfigurationRead.good();
-        vcpkgConfigurationRead.close();
+    std::cout << FG_SUCCESS " Project (" + projectName + ") successfully added to settings.json\n" STYLE_RESET;
 
-        if ( vcpkgConfigured == false )
-        {
-            std::ofstream vcpkgConfigurationWrite( configPath + "vcpkg-configuration.json" );
-            vcpkgConfigurationWrite << VCPKG_CONFIGURATION;
-            vcpkgConfigurationWrite.close();
+    if ( vcpkg ) CHECK_FOR_ERROR( CreateVcpkgJson( repositoryName, projectName ) )
 
-            std::cout << FG_GREEN "  vcpkg-configuration.json created successfully !\n" STYLE_RESET;
-        }
-
-        if ( fs::create_directory( configPath + projectName ) == false ) return "Could not create project (" + projectName + ") config folder\n";
-
-        std::ofstream vcpkgJson( configPath + projectName + "/vcpkg.json" );
-        vcpkgJson << VCPKG_JSON;
-        vcpkgJson.close();
-    }
-
-    return "";
+    return 0;
 }
 
 
 
-std::string CreateProjectSrc( std::string const& repositoryName,
-                              std::string const& projectName,
-                              bool const pch,
-                              bool const lib,
-                              bool const window )
+int CreateVcpkgJson( std::string const& repositoryName,
+                     std::string const& projectName )
+{
+    std::string const configPath = repositoryName + "/config";
+    std::string const vcpkgConfigPath = configPath + "/vcpkg-configuration.json";
+    std::string const projectConfigPath = configPath + "/" + projectName;
+
+    bool vcpkgConfigurationExists = false;
+        
+    std::ifstream vcpkgConfigurationRead( vcpkgConfigPath );
+    vcpkgConfigurationExists = vcpkgConfigurationRead.good();
+    vcpkgConfigurationRead.close();
+
+    if ( vcpkgConfigurationExists == false )
+    {
+        std::ofstream vcpkgConfigurationWrite( vcpkgConfigPath );
+        vcpkgConfigurationWrite << VCPKG_CONFIGURATION;
+        vcpkgConfigurationWrite.close();
+
+        std::cout << FG_SUCCESS "  vcpkg-configuration.json created successfully\n" STYLE_RESET;
+    }
+
+    ERROR_IF( fs::create_directory( projectConfigPath ) == false,
+              "Could not create project (" + projectName + ") config folder\n" )
+
+    std::ofstream vcpkgJson( projectConfigPath + "/vcpkg.json" );
+    vcpkgJson << VCPKG_JSON;
+    vcpkgJson.close();
+
+    std::cout << FG_SUCCESS "  Project (" + projectName + ")'s vcpkg.json created successfully\n" STYLE_RESET;
+
+    return 0;
+}
+
+
+
+int CreateProjectSrc( std::string const& repositoryName,
+                      std::string const& projectName,
+                      bool const pch,
+                      bool const lib,
+                      bool const window )
 {
     std::string const srcPath = repositoryName + "/src/" + projectName;
-    if ( fs::create_directory( srcPath ) == false ) return "Could not create project (" + projectName + ") src folder\n";
+
+    ERROR_IF( fs::create_directory( srcPath ) == false,
+              "Could not create project (" + projectName + ") src folder\n" )
 
     std::string maincppContent;
 
@@ -214,30 +226,38 @@ std::string CreateProjectSrc( std::string const& repositoryName,
         maincpp.close();
     }
     
-    return "";
+    return 0;
 }
 
 
 
-std::string AddDependencyToProjectConfig( std::string const& repositoryName,
-                                          std::string const& projectName,
-                                          std::string const& dependency )
+
+
+
+int AddDependency( std::string const& repositoryName,
+                   std::string const& projectName,
+                   std::string const& dependency )
 {
     std::ifstream settingsFileRead( repositoryName + "/config/settings.json" );
     nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
     settingsFileRead.close();
 
-    if ( settingsJson["projects"][dependency]["lib"] == false ) return "You can't add a non-library project (" + dependency + ") as a dependency\n";
+    if ( settingsJson["projects"][dependency]["lib"] == false )
+    {
+        std::cout << FG_ERROR "You can't add a non-library project (" + dependency + ") as a dependency\n" STYLE_RESET;
+        return 1;
+    }
 
     if ( settingsJson["projects"][dependency]["vcpkg"] )
     {
         if ( settingsJson["projects"][projectName]["vcpkg"] == false )
         {
-            settingsJson["projects"][projectName]["vcpkg"] = true;
+            settingsJson["projects"][projectName]["vcpkg"] = true; // TODO Ask User Input
 
             std::string const projectConfigPath = repositoryName + "/config/" + projectName ;
 
-            if ( fs::create_directory( projectConfigPath ) == false ) return "Could not create project (" + projectName + ") config folder\n";
+            ERROR_IF( fs::create_directory( projectConfigPath ) == false,
+                      "Could not create project (" + projectName + ") config folder\n" )
 
             std::ofstream vcpkgJson( projectConfigPath + "/vcpkg.json" );
             vcpkgJson << VCPKG_JSON;
@@ -251,38 +271,95 @@ std::string AddDependencyToProjectConfig( std::string const& repositoryName,
     settingsFileWrite << std::setw(4) << settingsJson;
     settingsFileWrite.close();
 
-    return "";
+    return 0;
 }
 
 
 
-std::string AddDependenciesToProjectConfig( std::string const& repositoryName,
-                                            std::string const& projectName,
-                                            std::vector<std::string> const& dependencies )
+int AddDependency( std::string const& repositoryName,
+                   std::string const& projectName,
+                   std::vector<std::string> const& dependencies )
 {
     for ( std::string const& dependency : dependencies )
-        if ( std::string const errorMessage = AddDependencyToProjectConfig( repositoryName, projectName, dependency );
-            errorMessage.empty() == false )
-            return errorMessage;
-    return "";
+        CHECK_FOR_ERROR( AddDependency( repositoryName, projectName, dependency ) )
+    return 0;
 }
 
 
 
-std::string MakeSolution( std::string const& repositoryName,
-                          bool const clear,
-                          bool const open )
+int AddPortVcpkg( std::string const& repositoryName,
+                  std::string const& projectName,
+                  std::string const& port )
+{
+    std::ifstream settingsFile( repositoryName + "/config/settings.json" );
+    nlohmann::json settingsJson = nlohmann::json::parse( settingsFile );
+    settingsFile.close();
+
+    if ( settingsJson["projects"][projectName]["vcpkg"] == false )
+    {
+        std::string answer;
+
+        std::cout << FG_INPUT "Project (" + projectName + ") doesn't have vcpkg, would you like to add it ? (o/n)\n" STYLE_RESET;
+        std::cin >> answer;
+
+        ERROR_IF( answer == "n" || answer == "N", "Port addition aborted\n" )
+        ERROR_IF( answer != "o" && answer != "O", "Port addition aborted : you didn't answer\n" )
+
+        settingsJson["projects"][projectName]["vcpkg"] = true;
+
+        CHECK_FOR_ERROR( CreateVcpkgJson( repositoryName, projectName ) )
+    }
+
+    std::ifstream vcpkgFileRead( repositoryName + "/config/" + projectName + "/vcpkg.json" );
+    nlohmann::json vcpkgJson = nlohmann::json::parse( vcpkgFileRead );
+    vcpkgFileRead.close();
+
+    for ( auto const& existingPort : vcpkgJson["dependencies"] )
+        ERROR_IF( static_cast<std::string>( existingPort ) == port,
+                  "Port (" + port + ") is already added to project (" + projectName + ")" )
+
+    vcpkgJson["dependencies"].push_back( port );
+
+    std::ofstream vcpkgFileWrite( repositoryName + "/config/" + projectName + "/vcpkg.json" );
+    vcpkgFileWrite << std::setw(4) << vcpkgJson;
+    vcpkgFileWrite.close();
+
+    std::cout << FG_SUCCESS "Port (" + port + ") successfully added to project (" + projectName + ")\n" STYLE_RESET;
+
+    return 0;
+}
+
+
+
+int AddPortVcpkg( std::string const& repositoryName,
+                  std::string const& projectName,
+                  std::vector<std::string> const& ports )
+{
+    for ( std::string const& port : ports )
+        CHECK_FOR_ERROR( AddPortVcpkg( repositoryName, projectName, port ) )
+    return 0;
+}
+
+
+
+
+
+
+
+int MakeSolution( std::string const& repositoryName,
+                  bool const clear,
+                  bool const open )
 {
     if ( std::string const idePath = repositoryName + "/ide";
         fs::exists( idePath ) )
     {
-        // if ( clear )
+        if ( clear )
         {
             fs::remove_all( idePath );
-            if ( fs::create_directory( idePath ) == false ) return "Could not create ide folder\n";
+            ERROR_IF( fs::create_directory( idePath ) == false, "Could not create ide folder\n" )
         }
     }
-    else if ( fs::create_directory( idePath ) == false ) return "Could not create ide folder\n";
+    else ERROR_IF( fs::create_directory( idePath ) == false, "Could not create ide folder\n" )
 
     std::ifstream settingsFile( repositoryName + "/config/settings.json" );
     nlohmann::json settingsJson = nlohmann::json::parse( settingsFile );
@@ -292,32 +369,30 @@ std::string MakeSolution( std::string const& repositoryName,
     for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
         projects.push_back( std::array<std::string, 2>{ project.first, project.second["guid"] } );
 
-    if ( std::string const errorMessage = MakeSolution( repositoryName, projects, settingsJson );
-         errorMessage.empty() == false )
-        return errorMessage;
+    CHECK_FOR_ERROR( MakeSolution( repositoryName, projects, settingsJson ) )
 
     if ( open ) ShellExecuteA( nullptr, "open", fs::absolute( repositoryName + "/ide" ).string().c_str(), nullptr, nullptr, SW_SHOWNORMAL );
 
-    return "";
+    return 0;
 }
 
 
 
-std::string MakeSolution( std::string const& repositoryName,
-                          std::string const& projectName,
-                          bool const clear,
-                          bool const open )
+int MakeSolution( std::string const& repositoryName,
+                  std::string const& projectName,
+                  bool const clear,
+                  bool const open )
 {
     if ( std::string const idePath = repositoryName + "/ide";
         fs::exists( idePath ) )
     {
-        // if ( clear )
+        if ( clear )
         {
             fs::remove_all( idePath );
-            if ( fs::create_directory( idePath ) == false ) return "Could not create ide folder\n";
+            ERROR_IF( fs::create_directory( idePath ) == false, "Could not create ide folder\n" )
         }
     }
-    else if ( fs::create_directory( idePath ) == false ) return "Could not create ide folder\n";
+    else ERROR_IF( fs::create_directory( idePath ) == false, "Could not create ide folder\n" )
 
     std::ifstream settingsFile( repositoryName + "/config/settings.json" );
     nlohmann::json settingsJson = nlohmann::json::parse( settingsFile );
@@ -330,20 +405,18 @@ std::string MakeSolution( std::string const& repositoryName,
         projects.push_back( std::array<std::string, 2>{ dependencyName, settingsJson["projects"][dependencyName]["guid"] } );
     }
 
-    if ( std::string const errorMessage = MakeSolution( repositoryName, projects, settingsJson );
-         errorMessage.empty() == false )
-        return errorMessage;
+    CHECK_FOR_ERROR( MakeSolution( repositoryName, projects, settingsJson ) )
 
     if ( open ) ShellExecuteA( nullptr, "open", fs::absolute( repositoryName + "/ide" ).string().c_str(), nullptr, nullptr, SW_SHOWNORMAL );
 
-    return "";
+    return 0;
 }
 
 
 
-std::string MakeSolution( std::string const& repositoryName,
-                          std::vector<std::array<std::string, 2>>& projects,
-                          nlohmann::json const& settingsJson )
+int MakeSolution( std::string const& repositoryName,
+                  std::vector<std::array<std::string, 2>>& projects,
+                  nlohmann::json const& settingsJson )
 {
     std::string projectsForSln;
     std::string globalSection;
@@ -353,11 +426,9 @@ std::string MakeSolution( std::string const& repositoryName,
         std::string const& projectName = project[0];
         std::string const& projectGui = project[1];
 
-        if ( std::string const errorMessage = MakeProject( repositoryName, projectName, settingsJson );
-             errorMessage.empty() == false )
-            return errorMessage;
+        CHECK_FOR_ERROR( MakeProject( repositoryName, projectName, settingsJson ) )
     
-        projectsForSln += "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"" + projectName + "\", \"" + projectName + "\\" + projectName + ".vcxproj\", \"{" + projectGui + "}\""                "\n";
+        projectsForSln += "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"" + projectName + "\", \"" + projectName + "\\" + projectName + ".vcxproj\", \"{" + projectGui + "}\""                 "\n";
         AddDependenciesToSln( settingsJson, projectName, projectsForSln, projects );
         projectsForSln += "EndProject"                                                                                                                                                                    "\n";
     
@@ -371,18 +442,19 @@ std::string MakeSolution( std::string const& repositoryName,
     sln << SLN( projectsForSln, globalSection, solutionGuid );
     sln.close();
 
-    return "";
+    return 0;
 }
 
 
 
-std::string MakeProject( std::string const& repositoryName,
-                         std::string const& projectName,
-                         nlohmann::json const& settingsJson )
+int MakeProject( std::string const& repositoryName,
+                 std::string const& projectName,
+                 nlohmann::json const& settingsJson )
 {
     std::string const ideProjectPath = repositoryName + "/ide/" + projectName;
 
-    if ( fs::create_directory( ideProjectPath ) == false ) return "Could not create ide project (" + projectName + ") folder\n";
+    ERROR_IF( fs::exists( ideProjectPath ) == false && fs::create_directory( ideProjectPath ) == false,
+              "Could not create ide project (" + projectName + ") folder\n" )
 
     std::string const& guid = settingsJson["projects"][projectName]["guid"];
 
@@ -421,24 +493,26 @@ std::string MakeProject( std::string const& repositoryName,
 
     std::ofstream vcxproj( ideProjectPath + "/" + projectName + ".vcxproj" );
     vcxproj << VCXPROJ_1( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies );
-    AddSrcToVcxproj( repositoryName + "/src/", projectName, vcxproj );
+    CHECK_FOR_ERROR( AddSrcToVcxproj( repositoryName + "\\", "src\\" + projectName, vcxproj ) )
+    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\", "res", vcxproj ) )
     vcxproj << VCXPROJ_2( projectReferences );
     vcxproj.close();
 
-    return "";
+    return 0;
 }
 
 
 
-void AddSrcToVcxproj( std::string const& srcPath,
-                      std::string const& subFolder,
-                      std::ofstream& vcxproj )
+int AddSrcToVcxproj( std::string const& srcPath,
+                     std::string const& subFolder,
+                     std::ofstream& vcxproj )
 {
     for ( auto const& entry : fs::directory_iterator( srcPath + subFolder ) )
     {
+        std::cout << entry << "\n";
         if ( entry.is_directory() )
         {
-            AddSrcToVcxproj( entry.path().string(), subFolder + "\\" + entry.path().filename().string(), vcxproj );
+            AddSrcToVcxproj( srcPath, subFolder + "\\" + entry.path().filename().string(), vcxproj );
             continue;
         }
 
@@ -447,7 +521,7 @@ void AddSrcToVcxproj( std::string const& srcPath,
              fileExtension == ".hpp" ||
              fileExtension == ".tpp" ||
              fileExtension == ".inl" )
-            vcxproj << "        <ClInclude Include=\"$(SolutionDir)..\\src\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
+            vcxproj << "        <ClInclude Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                                  "\n";
 
         else if ( fileExtension == ".c" ||
                   fileExtension == ".cpp" )
@@ -460,21 +534,56 @@ void AddSrcToVcxproj( std::string const& srcPath,
                 continue;
             }
 
-            vcxproj << "        <ClCompile Include=\"$(SolutionDir)..\\src\\" + subFolder + "\\" + fileName + "\" />"                                                                                     "\n";
+            vcxproj << "        <ClCompile Include=\"$(SolutionDir)..\\" + subFolder + "\\" + fileName + "\" />"                                                                                          "\n";
         }
+
+        else vcxproj << "        <None Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                                      "\n";
     }
+
+    return 0;
 }
 
 
 
-void AddDependenciesToSln( nlohmann::json const& settingsJson,
-                           std::string const& projectName,
-                           std::string& projectsForSln,
-                           std::vector<std::array<std::string, 2>>& projects )
+int AddResToVcxproj( std::string const& resPath,
+                     std::string const& subFolder,
+                     std::ofstream& vcxproj )
+{
+    for ( auto const& entry : fs::directory_iterator( resPath + subFolder ) )
+    {
+        if ( entry.is_directory() )
+        {
+            AddSrcToVcxproj( resPath, subFolder + "\\" + entry.path().filename().string(), vcxproj );
+            continue;
+        }
+
+        if ( std::string const fileExtension = entry.path().extension().string();
+             fileExtension == ".png" ||
+             fileExtension == ".jpg" ||
+             fileExtension == ".jpeg" ||
+             fileExtension == ".dds" ||
+             fileExtension == ".bmp" ||
+             fileExtension == ".gif" ||
+             fileExtension == ".ico" ||
+             fileExtension == ".svg" )
+            vcxproj << "        <Image Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
+
+        else vcxproj << "        <None Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
+    }
+
+    return 0;
+}
+
+
+
+int AddDependenciesToSln( nlohmann::json const& settingsJson,
+                          std::string const& projectName,
+                          std::string& projectsForSln,
+                          std::vector<std::array<std::string, 2>>& projects )
 {
     nlohmann::json const& dependencies = settingsJson["projects"][projectName]["dependencies"];
 
-    if ( dependencies.empty() ) return;
+    if ( dependencies.empty() ) return 0;
     
     projectsForSln += "\t""ProjectSection(ProjectDependencies) = postProject"                                                                                                                             "\n";
     for ( nlohmann::json const& dependency: dependencies )
@@ -497,8 +606,9 @@ void AddDependenciesToSln( nlohmann::json const& settingsJson,
         projects.push_back( std::array{ dependencyName, dependencyGui } );
     }
     projectsForSln += "\t""EndProjectSection"                                                                                                                                                             "\n";
-}
 
+    return 0;
+}
 
 
 

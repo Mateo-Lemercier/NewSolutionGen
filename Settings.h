@@ -8,29 +8,115 @@
 
 #define STYLE( style ) "\033[" style "m"
 #define STYLE_RESET STYLE( "0" )
-#define FG_RED STYLE( "31" )
-#define FG_GREEN STYLE( "32" )
+#define FG_ERROR STYLE( "31" )
+#define FG_SUCCESS STYLE( "32" )
+#define FG_INPUT STYLE( "36" )
 
 
 
-#define ACT( action ) "-" action
-#define OBL( argument ) " [" argument "]"
-#define OPT( argument ) " <" argument ">"
-#define LAST "               "
+// #define ACT( action ) "-" action
+// #define OBL( argument ) " [" argument "]"
+// #define OPT( argument ) " <" argument ">"
+// #define LAST "               "
 
-#define HELP_MESSAGE "\n"\
+#define HELP_START "\n"\
     "Le Solution Generator est un outil permettant de generer des solutions Visual Studio."                        "\n"\
-    "Utilisation : SolutionGen.exe -action [arguments_obligatoires] <argument_optionnels>"                         "\n"\
+    "Utilisation : SolutionGen.exe -action [Required_Arguments] <optional_arguments>"                              "\n"\
     ""                                                                                                             "\n"\
-    "Actions Disponibles :"                                                                                        "\n"\
+
+#define HELP_MESSAGE \
+    "Available Actions :"                                                                                          "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
     "|                                                                                                             |\n"\
-    "|  " ACT("help") LAST "                                                                                       |\n"\
+    "|  -help <action>                                                                                             |\n"\
     "|                                                                                                             |\n"\
-    "|  " ACT("create") OBL("Nom_du_repos") LAST "                                                                 |\n"\
+    "|  -create [Repository] [Solution] <project> <dependency_projects...> <-pch|-vcpkg|-lib|-window>              |\n"\
     "|                                                                                                             |\n"\
+    "|  -make [Repository] <project> <-open|-clear>                                                                |\n"\
+    "|                                                                                                             |\n"\
+    "|  -addProject [Repository] [Project] <dependency_projects...> <-pch|-vcpkg|-lib|-window>                     |\n"\
+    "|                                                                                                             |\n"\
+    "|  -addDependency [Repository] [Project] [Dependency_Project] <other_dependency_projects...>                  |\n"\
+    "|                                                                                                             |\n"\
+    "|  -addPort [Repository] [Project] [Port] <other_ports...>                                                    |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
+
+#define HELP_HELP \
+    "Action Description (Help) :"                                                                                  "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
-    ""
+    "|  -help <action>                                                                                             |\n"\
+    "|                                                                                                             |\n"\
+    "|    action - The name of the action from which you want further informations                                 |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
+
+#define HELP_CREATE \
+    "Action Description (Create) :"                                                                                "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -create [Repository] [Solution] <project> <dependency_projects...> <-pch|-vcpkg|-lib|-window>              |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository where the solution is going to be created                        |\n"\
+    "|    Solution - The name of the solution to be created                                                        |\n"\
+    "|    project - The name of the first project of the solution (default is the same as Solution)                |\n"\
+    "|    dependency_projects... -                                                                                 |\n"\
+    "|    -pch - Whether or not to enable the precompiled header file                                              |\n"\
+    "|    -vcpkg - Whether or not to enable vcpkg                                                                  |\n"\
+    "|    -lib - Whether or not to make this project a static library                                              |\n"\
+    "|    -window - Whether or to make this project a windows project                                              |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
+
+#define HELP_MAKE \
+    "Action Description (Make) :"                                                                                  "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -make [Repository] <project> <-open|-clear>                                                                |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    project - The name of the project to make (only this project and its dependencies will be generated)     |\n"\
+    "|    -open - Whether or not the file explorer will open in the ide folder                                     |\n"\
+    "|    -clear - Whether or not the ide folder will be deleted before generating the files                       |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
+
+#define HELP_ADD_PROJECT \
+    "Action Description (AddProject) :"                                                                            "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -addProject [Repository] [Project] <dependency_projects...> <-pch|-vcpkg|-lib|-window>                     |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    Project - The name of the project to be added                                                            |\n"\
+    "|    dependency_projects... -                                                                                 |\n"\
+    "|    -pch - Whether or not to enable the precompiled header file                                              |\n"\
+    "|    -vcpkg - Whether or not to enable vcpkg                                                                  |\n"\
+    "|    -lib - Whether or not to make this project a static library                                              |\n"\
+    "|    -window - Whether or to make this project a windows project                                              |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
+
+#define HELP_ADD_DEPENDENCY \
+    "Action Description (AddDependency) :"                                                                         "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -addDependency [Repository] [Project] [Dependency_Project] <other_dependency_projects...>                  |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    Project - The name of the project to which the dependency will be added                                  |\n"\
+    "|    Dependency_Project - The name of the project to be added as a dependency                                 |\n"\
+    "|    other_dependency_projects... - As many other dependencies as you want                                    |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
+
+#define HELP_ADD_PORT \
+    "Action Description (AddPort) :"                                                                               "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -addPort [Repository] [Project] [Port] <other_ports...>                                                    |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    Project - The name of the project to which the port will be added                                        |\n"\
+    "|    Port - The name of the vcpkg port to be added                                                            |\n"\
+    "|    other_ports... - As many other ports as you want                                                         |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"
 
 
 
@@ -132,9 +218,9 @@
     "    },"                                                                                               "\n"\
     "    \"registries\": ["                                                                                "\n"\
     "        {"                                                                                            "\n"\
-    "        \"kind\": \"artifact\","                                                                      "\n"\
-    "        \"location\": \"https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip\"," "\n"\
-    "        \"name\": \"microsoft\""                                                                      "\n"\
+    "            \"kind\": \"artifact\","                                                                      "\n"\
+    "            \"location\": \"https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip\"," "\n"\
+    "            \"name\": \"microsoft\""                                                                      "\n"\
     "        }"                                                                                            "\n"\
     "    ]"                                                                                                "\n"\
     "}"
@@ -370,11 +456,29 @@
     "</Project>")
 
 #define CLCOMPILE_PCH_CPP( subFolder, fileName ) (\
-    "        <ClCompile Include=\"$(SolutionDir)..\\src\\" + (subFolder) + "\\" + (fileName) + "\">"                                                                                                  "\n"\
+    "        <ClCompile Include=\"$(SolutionDir)..\\" + (subFolder) + "\\" + (fileName) + "\">"                                                                                                  "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|Win32&apos;\">Create</PrecompiledHeader>"                                                       "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|Win32&apos;\">Create</PrecompiledHeader>"                                                     "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;\">Create</PrecompiledHeader>"                                                         "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;\">Create</PrecompiledHeader>"                                                       "\n"\
     "        </ClCompile>"                                                                                                                                                                            "\n")
+
+
+
+// #define CHECK_FOR_ERROR( function ) \
+//     if ( std::string const errorMessage = function;\
+//          errorMessage.empty() == false )\
+//         return errorMessage
+
+#define ERROR_IF( function, message ) \
+    if ( function )\
+    {\
+        std::cout << FG_ERROR message STYLE_RESET;\
+        return 1;\
+    }
+
+#define CHECK_FOR_ERROR( function ) \
+    if ( SolutionGenerator::function != 0 )\
+        return 1;
 
 

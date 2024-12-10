@@ -8,9 +8,26 @@
 
 
 
-int Help()
+int Help( int const argc, char *argv[] )
 {
-    std::cout << HELP_MESSAGE;
+    if ( argc == 2 )
+    {
+        std::cout << HELP_START << HELP_MESSAGE;
+        return 0;
+    }
+
+    if ( argc != 3 ) return 1;
+
+    std::cout << HELP_START;
+
+    if ( std::string const& action = argv[2]; action == "help" ) std::cout << HELP_HELP;
+    else if ( action == "create" ) std::cout << HELP_CREATE;
+    else if ( action == "make" ) std::cout << HELP_MAKE;
+    else if ( action == "addProject" ) std::cout << HELP_ADD_PROJECT;
+    else if ( action == "addDependency" ) std::cout << HELP_ADD_DEPENDENCY;
+    else if ( action == "addPort" ) std::cout << HELP_ADD_PORT;
+    else return 1;
+
     return 0;
 }
 
@@ -18,7 +35,10 @@ int Create( int const argc, char *argv[] )
 {
     if ( argc < 4 ) return 1;
 
-    std::string projectName = argv[3];
+    std::string const& repositoryName = argv[2];
+    std::string const& solutionName = argv[3];
+    std::string projectName = solutionName;
+    std::vector<std::string> dependencies;
     bool pch = false;
     bool vcpkg = false;
     bool lib = false;
@@ -26,15 +46,29 @@ int Create( int const argc, char *argv[] )
 
     if ( argc != 4 )
     {
-        if ( std::string const argv4 = argv[4]; argv4 == "-pch" ) pch = true;
-        else if ( argv4 == "-vcpkg" ) vcpkg = true;
-        else if ( argv4 == "-lib" ) lib = true;
-        else if ( argv4 == "-window" ) window = true;
-        else projectName = argv4;
+        unsigned char startIndex = 4;
 
-        for ( int i = 5; i < argc; ++i )
+        if ( std::string const& argv4 = argv[4];
+             argv4[0] != '-' )
         {
-            if ( std::string const argvi = argv[i]; argvi == "-pch" ) pch = true;
+            projectName = argv4;
+            startIndex++;
+
+            dependencies.reserve( argc-5 );
+
+            for ( unsigned char i = 5; i < argc; i++, startIndex++ )
+            {
+                std::string const& argvi = argv[i];
+                
+                if ( argvi[0] == '-' ) break;
+                
+                dependencies.push_back( argvi );
+            }
+        }
+
+        for ( unsigned char i = startIndex; i < argc; i++ )
+        {
+            if ( std::string const& argvi = argv[i]; argvi == "-pch" ) pch = true;
             else if ( argvi == "-vcpkg" ) vcpkg = true;
             else if ( argvi == "-lib" ) lib = true;
             else if ( argvi == "-window" ) window = true;
@@ -42,19 +76,11 @@ int Create( int const argc, char *argv[] )
         }
     }
 
-    if ( std::string const errorMessage = SolutionGenerator::CreateRepository( argv[2], argv[3], projectName, pch, vcpkg, lib, window );
-        errorMessage.empty() == false )
-    {
-        std::cout << FG_RED << errorMessage << STYLE_RESET;
-        return 1;
-    }
+    CHECK_FOR_ERROR( CreateRepository( repositoryName, solutionName, projectName, pch, vcpkg, lib, window ) )
 
-    if ( std::string const errorMessage = SolutionGenerator::MakeSolution( argv[2], false, true );
-        errorMessage.empty() == false )
-    {
-        std::cout << FG_RED << errorMessage << STYLE_RESET;
-        return 1;
-    }
+    CHECK_FOR_ERROR( AddDependency( repositoryName, projectName, dependencies ) )
+
+    CHECK_FOR_ERROR( MakeSolution( repositoryName, false, true ) )
 
     return 0;
 }
@@ -63,43 +89,33 @@ int Make( int const argc, char *argv[] )
 {
     if ( argc < 3 ) return 1;
 
+    std::string const& repositoryName = argv[2];
     bool clear = false;
     bool open = false;
 
     if ( argc != 3 )
     {
-        bool specifiedProject = false;
+        unsigned char startIndex = 3;
 
-        if ( std::string const argvi = argv[3]; argvi == "-clear" ) clear = true;
-        else if ( argvi == "-open" ) open = true;
-        else specifiedProject = true;
+        if ( std::string const& argv3 = argv[3];
+             argv3[0] != '-' )
+            startIndex++;
 
-        for ( int i = 4; i < argc; ++i )
+        for ( unsigned char i = startIndex; i < argc; i++ )
         {
-            if ( std::string const argvi = argv[i]; argvi == "-clear" ) clear = true;
+            if ( std::string const& argvi = argv[i]; argvi == "-clear" ) clear = true;
             else if ( argvi == "-open" ) open = true;
             else return 1;
         }
 
-        if ( specifiedProject )
+        if ( startIndex == 4 )
         {
-            if ( std::string const errorMessage = SolutionGenerator::MakeSolution( argv[2], argv[3], clear, open );
-                errorMessage.empty() == false )
-            {
-                std::cout << FG_RED << errorMessage << STYLE_RESET;
-                return 1;
-            }
-
+            CHECK_FOR_ERROR( MakeSolution( repositoryName, argv[3], clear, open ) )
             return 0;
         }
     }
 
-    if ( std::string const errorMessage = SolutionGenerator::MakeSolution( argv[2], clear, open );
-        errorMessage.empty() == false )
-    {
-        std::cout << FG_RED << errorMessage << STYLE_RESET;
-        return 1;
-    }
+    CHECK_FOR_ERROR( MakeSolution( repositoryName, clear, open ) )
 
     return 0;
 }
@@ -108,6 +124,9 @@ int AddProject( int const argc, char* argv[] )
 {
     if ( argc < 4 ) return 1;
 
+    std::string const& repositoryName = argv[2];
+    std::string const& projectName = argv[3];
+    std::vector<std::string> dependencies;
     bool pch = false;
     bool vcpkg = false;
     bool lib = false;
@@ -115,9 +134,26 @@ int AddProject( int const argc, char* argv[] )
 
     if ( argc != 4 )
     {
-        for ( int i = 5; i < argc; ++i )
+        unsigned char startIndex = 4;
+
+        if ( std::string const& argv4 = argv[4];
+             argv4[0] != '-' )
         {
-            if ( std::string const argvi = argv[i]; argvi == "-pch" ) pch = true;
+            dependencies.reserve( argc-4 );
+
+            for ( unsigned char i = 4; i < argc; i++, startIndex++ )
+            {
+                std::string const& argvi = argv[i];
+                
+                if ( argvi[0] == '-' ) break;
+                
+                dependencies.push_back( argvi );
+            }
+        }
+        
+        for ( unsigned char i = startIndex; i < argc; i++ )
+        {
+            if ( std::string const& argvi = argv[i]; argvi == "-pch" ) pch = true;
             else if ( argvi == "-vcpkg" ) vcpkg = true;
             else if ( argvi == "-lib" ) lib = true;
             else if ( argvi == "-window" ) window = true;
@@ -125,19 +161,11 @@ int AddProject( int const argc, char* argv[] )
         }
     }
 
-    if ( std::string const errorMessage = SolutionGenerator::CreateProject( argv[2], argv[3], pch, vcpkg, lib, window );
-        errorMessage.empty() == false )
-    {
-        std::cout << FG_RED << errorMessage << STYLE_RESET;
-        return 1;
-    }
+    CHECK_FOR_ERROR( CreateProject( repositoryName, projectName, pch, vcpkg, lib, window ) )
 
-    if ( std::string const errorMessage = SolutionGenerator::MakeSolution( argv[2], false, false );
-        errorMessage.empty() == false )
-    {
-        std::cout << FG_RED << errorMessage << STYLE_RESET;
-        return 1;
-    }
+    CHECK_FOR_ERROR( AddDependency( repositoryName, projectName, dependencies ) )
+
+    CHECK_FOR_ERROR( MakeSolution( repositoryName, false, false ) )
 
     return 0;
 }
@@ -149,25 +177,26 @@ int AddDependency( int const argc, char* argv[] )
     std::vector<std::string> dependencies;
     dependencies.reserve( argc-4 );
 
-    for ( int i = 4; i < argc; ++i )
+    for ( unsigned char i = 4; i < argc; i++ )
         dependencies.push_back( argv[i] );
 
-    if ( std::string const errorMessage = SolutionGenerator::AddDependenciesToProjectConfig( argv[2], argv[3], dependencies );
-        errorMessage.empty() == false )
-    {
-        std::cout << FG_RED << errorMessage << STYLE_RESET;
-        return 1;
-    }
+    CHECK_FOR_ERROR( AddDependency( argv[2], argv[3], dependencies ) )
 
     return 0;
 }
 
 
-int AddPort( int const argc, char* argv[] )
+int AddPortVcpkg( int const argc, char* argv[] )
 {
     if ( argc < 5 ) return 1;
 
-    // TODO
+    std::vector<std::string> ports;
+    ports.reserve( argc-4 );
+
+    for ( unsigned char i = 4; i < argc; i++ )
+        ports.push_back( argv[i] );
+
+    CHECK_FOR_ERROR( AddPortVcpkg( argv[2], argv[3], ports ) )
 
     return 0;
 }
@@ -178,18 +207,19 @@ int main( int const argc, char *argv[] )
 {
     srand( time( nullptr ) );
     
-    if ( argc < 2 )
+    if ( argc == 1 )
     {
         // SolutionGenerator.exe
         return 0;
     }
 
-    if ( argv[1] == std::string( "-help" ) ) return Help();
-    if ( argv[1] == std::string( "-create" ) ) return Create( argc, argv );
-    if ( argv[1] == std::string( "-make") ) return Make( argc, argv );
-    if ( argv[1] == std::string( "-addProject" ) ) return AddProject( argc, argv );
-    if ( argv[1] == std::string( "-addDependency" ) ) return AddDependency( argc, argv );
-    if ( argv[1] == std::string( "-addPort" ) ) return AddPort( argc, argv );
+    std::string const& action = argv[1];
+    if ( action == "-help" ) return Help( argc, argv );
+    if ( action == "-create" ) return Create( argc, argv );
+    if ( action == "-make") return Make( argc, argv );
+    if ( action == "-addProject" ) return AddProject( argc, argv );
+    if ( action == "-addDependency" ) return AddDependency( argc, argv );
+    if ( action == "-addPort" ) return AddPortVcpkg( argc, argv );
 
     return 0;
 }
