@@ -10,6 +10,10 @@ std::string GenerateGuid();
 
 
 
+void CheckVersion( std::string const& repositoryName );
+
+
+
 int CreateRepository( std::string const& repositoryName,
                       std::string const& solutionName,
                       std::string const& projectName,
@@ -18,11 +22,17 @@ int CreateRepository( std::string const& repositoryName,
                       bool lib,
                       bool window );
 
+int CreateBats( std::string const& repositoryName );
+
+int CreateBats( std::string const& repositoryName,
+                std::string const& projectName );
+
 int CreateSolutionConfig( std::string const& repositoryName,
                           std::string const& solutionName );
 
 int CreateProject( std::string const& repositoryName,
                    std::string const& projectName,
+                   bool startup,
                    bool pch,
                    bool vcpkg,
                    bool lib,
@@ -30,6 +40,7 @@ int CreateProject( std::string const& repositoryName,
 
 int CreateProjectConfig( std::string const& repositoryName,
                          std::string const& projectName,
+                         bool startup,
                          bool pch,
                          bool vcpkg,
                          bool lib,

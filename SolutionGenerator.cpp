@@ -31,6 +31,54 @@ std::string GenerateGuid()
 
 
 
+void CheckVersion( std::string const& repositoryName )
+{
+    std::string const configPath = repositoryName + "/config/settings.json";
+    
+    std::ifstream settingsFileRead( configPath );
+    nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
+    settingsFileRead.close();
+    
+    if ( settingsJson["version"] == VERSION ) return;
+
+    if ( settingsJson["version"] == 1.17 )
+    {
+        std::string startupProject = static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ).begin()->first;
+
+        while ( true )
+        {
+            std::string answer;
+            std::cout << FG_INPUT
+                "Your project is being updated to the latest version (" VERSION ")."                    "\n"
+                "The startup project was set to " + startupProject + ", do you want to keep it ? (o/n)" "\n" STYLE_RESET;
+            std::cin >> answer;
+
+            if ( answer == "o" || answer == "O" ) break;
+
+            if ( answer != "n" && answer != "N" ) continue;
+
+            do {
+                std::cout << FG_INPUT "\nPlease, type the name of the project you want to set as the startup project : " STYLE_RESET;
+                std::cin >> startupProject;
+            } while ( settingsJson["projects"].contains( startupProject ) == false );
+
+            break;
+        }
+        
+        settingsJson["startup_project"] = startupProject;
+    }
+
+    settingsJson["version"] = VERSION;
+
+    std::ofstream settingsFileWrite( configPath );
+    settingsFileWrite << std::setw(4) << settingsJson;
+    settingsFileWrite.close();
+
+    std::cout << FG_SUCCESS "settings.json updated to version " VERSION " !\n" STYLE_RESET;
+}
+
+
+
 
 
 
@@ -57,15 +105,48 @@ int CreateRepository( std::string const& repositoryName,
     gitignore << "ide";
     gitignore.close();
 
+    ERROR_IF( CreateBats( repositoryName ), "Could not create make.bat file\n" )
+
     std::cout << FG_SUCCESS "Repository (" + repositoryName + ") created successfully !\n" STYLE_RESET;
 
     CHECK_FOR_ERROR( CreateSolutionConfig( repositoryName, solutionName ) )
 
     std::cout << FG_SUCCESS "Solution (" + solutionName + ") config created successfully !\n" STYLE_RESET;
 
-    CHECK_FOR_ERROR( CreateProject( repositoryName, projectName, pch, vcpkg, lib, window ) )
+    CHECK_FOR_ERROR( CreateProject( repositoryName, projectName, true, pch, vcpkg, lib, window ) )
 
     std::cout << FG_SUCCESS "Project (" + projectName + ") created successfully !\n" STYLE_RESET;
+
+    return 0;
+}
+
+
+
+int CreateBats( std::string const& repositoryName )
+{
+    std::ofstream make( repositoryName + "/bin/make.bat" );
+    make <<
+        "cd ../.."                            "\n"
+        "SolutionGen.exe -make " + repositoryName;
+    make.close();
+
+    std::cout << FG_SUCCESS "make.bat created successfully !\n" STYLE_RESET;
+    
+    return 0;
+}
+
+
+
+int CreateBats( std::string const& repositoryName,
+                std::string const& projectName )
+{
+    std::ofstream make( repositoryName + "/bin/make-" + projectName + ".bat" );
+    make <<
+        "cd ../.."                                                "\n"
+        "SolutionGen.exe -make " + repositoryName + " " + projectName;
+    make.close();
+
+    std::cout << FG_SUCCESS "make-" + projectName + ".bat created successfully !\n" STYLE_RESET;
 
     return 0;
 }
@@ -86,14 +167,20 @@ int CreateSolutionConfig( std::string const& repositoryName,
 
 int CreateProject( std::string const& repositoryName,
                    std::string const& projectName,
+                   bool const startup,
                    bool const pch,
                    bool const vcpkg,
                    bool const lib,
                    bool const window )
 {
-    CHECK_FOR_ERROR( CreateProjectConfig( repositoryName, projectName, pch, vcpkg, lib, window ) )
+    ERROR_IF( CreateBats( repositoryName, projectName ), "Could not create make-" + projectName + ".bat file\n" )
+    
+    CHECK_FOR_ERROR( CreateProjectConfig( repositoryName, projectName, startup, pch, vcpkg, lib, window ) )
 
     CHECK_FOR_ERROR( CreateProjectSrc( repositoryName, projectName, pch, lib, window ) )
+
+    ERROR_IF( fs::create_directory( repositoryName + "/res/" + projectName ) == false,
+              "Could not create project (" + projectName + ") res folder\n" )
 
     std::cout << FG_SUCCESS "  Project (" + projectName + ") src files created successfully !\n" STYLE_RESET;
 
@@ -104,6 +191,7 @@ int CreateProject( std::string const& repositoryName,
 
 int CreateProjectConfig( std::string const& repositoryName,
                          std::string const& projectName,
+                         bool const startup,
                          bool const pch,
                          bool const vcpkg,
                          bool const lib,
@@ -123,6 +211,8 @@ int CreateProjectConfig( std::string const& repositoryName,
     settingsJson["projects"][projectName]["vcpkg"] = vcpkg;
     settingsJson["projects"][projectName]["lib"] = lib;
     settingsJson["projects"][projectName]["window"] = window;
+
+    if ( startup ) settingsJson["startup_project"] = projectName;
 
     std::ofstream settingsFileWrite( settingsPath );
     settingsFileWrite << std::setw(4) << settingsJson;
@@ -367,7 +457,17 @@ int MakeSolution( std::string const& repositoryName,
 
     std::vector<std::array<std::string, 2>> projects;
     for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
-        projects.push_back( std::array<std::string, 2>{ project.first, project.second["guid"] } );
+    {
+        std::string const& projectName = project.first;
+
+        if ( settingsJson["startup_project"] == projectName )
+        {
+            projects.insert( projects.begin(), std::array<std::string, 2>{ projectName, project.second["guid"] } );
+            continue;
+        }
+
+        projects.push_back( std::array<std::string, 2>{ projectName, project.second["guid"] } );
+    }
 
     CHECK_FOR_ERROR( MakeSolution( repositoryName, projects, settingsJson ) )
 
@@ -493,8 +593,8 @@ int MakeProject( std::string const& repositoryName,
 
     std::ofstream vcxproj( ideProjectPath + "/" + projectName + ".vcxproj" );
     vcxproj << VCXPROJ_1( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies );
-    CHECK_FOR_ERROR( AddSrcToVcxproj( repositoryName + "\\", "src\\" + projectName, vcxproj ) )
-    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\", "res", vcxproj ) )
+    CHECK_FOR_ERROR( AddSrcToVcxproj( repositoryName + "\\src\\", projectName, vcxproj ) )
+    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\res\\", projectName, vcxproj ) )
     vcxproj << VCXPROJ_2( projectReferences );
     vcxproj.close();
 
@@ -507,26 +607,29 @@ int AddSrcToVcxproj( std::string const& srcPath,
                      std::string const& subFolder,
                      std::ofstream& vcxproj )
 {
+    if ( fs::exists( srcPath ) == false ) return 0;
+
+    if ( fs::exists( srcPath + subFolder ) == false ) return 0;
+
     for ( auto const& entry : fs::directory_iterator( srcPath + subFolder ) )
     {
-        std::cout << entry << "\n";
         if ( entry.is_directory() )
         {
             AddSrcToVcxproj( srcPath, subFolder + "\\" + entry.path().filename().string(), vcxproj );
             continue;
         }
 
-        if ( std::string const fileExtension = entry.path().extension().string();
+        if ( std::string const& fileExtension = entry.path().extension().string();
              fileExtension == ".h" ||
              fileExtension == ".hpp" ||
              fileExtension == ".tpp" ||
              fileExtension == ".inl" )
-            vcxproj << "        <ClInclude Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                                  "\n";
+            vcxproj << "        <ClInclude Include=\"$(SolutionDir)..\\src\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                                  "\n";
 
         else if ( fileExtension == ".c" ||
                   fileExtension == ".cpp" )
         {
-            std::string const fileName = entry.path().filename().string();
+            std::string const& fileName = entry.path().filename().string();
 
             if ( fileName == "pch.cpp" )
             {
@@ -534,10 +637,10 @@ int AddSrcToVcxproj( std::string const& srcPath,
                 continue;
             }
 
-            vcxproj << "        <ClCompile Include=\"$(SolutionDir)..\\" + subFolder + "\\" + fileName + "\" />"                                                                                          "\n";
+            vcxproj << "        <ClCompile Include=\"$(SolutionDir)..\\src\\" + subFolder + "\\" + fileName + "\" />"                                                                                          "\n";
         }
 
-        else vcxproj << "        <None Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                                      "\n";
+        else vcxproj << "        <None Include=\"$(SolutionDir)..\\src\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                                      "\n";
     }
 
     return 0;
@@ -549,6 +652,10 @@ int AddResToVcxproj( std::string const& resPath,
                      std::string const& subFolder,
                      std::ofstream& vcxproj )
 {
+    if ( fs::exists( resPath ) == false ) return 0;
+
+    if ( fs::exists( resPath + subFolder ) == false ) return 0;
+    
     for ( auto const& entry : fs::directory_iterator( resPath + subFolder ) )
     {
         if ( entry.is_directory() )
@@ -557,7 +664,7 @@ int AddResToVcxproj( std::string const& resPath,
             continue;
         }
 
-        if ( std::string const fileExtension = entry.path().extension().string();
+        if ( std::string const& fileExtension = entry.path().extension().string();
              fileExtension == ".png" ||
              fileExtension == ".jpg" ||
              fileExtension == ".jpeg" ||
@@ -566,9 +673,9 @@ int AddResToVcxproj( std::string const& resPath,
              fileExtension == ".gif" ||
              fileExtension == ".ico" ||
              fileExtension == ".svg" )
-            vcxproj << "        <Image Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
+            vcxproj << "        <Image Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
 
-        else vcxproj << "        <None Include=\"$(SolutionDir)..\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
+        else vcxproj << "        <None Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
     }
 
     return 0;

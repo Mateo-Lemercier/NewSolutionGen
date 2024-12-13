@@ -115,6 +115,8 @@ int Make( int const argc, char *argv[] )
         }
     }
 
+    SolutionGenerator::CheckVersion( repositoryName );
+
     CHECK_FOR_ERROR( MakeSolution( repositoryName, clear, open ) )
 
     return 0;
@@ -127,6 +129,7 @@ int AddProject( int const argc, char* argv[] )
     std::string const& repositoryName = argv[2];
     std::string const& projectName = argv[3];
     std::vector<std::string> dependencies;
+    bool startup = false;
     bool pch = false;
     bool vcpkg = false;
     bool lib = false;
@@ -153,7 +156,8 @@ int AddProject( int const argc, char* argv[] )
         
         for ( unsigned char i = startIndex; i < argc; i++ )
         {
-            if ( std::string const& argvi = argv[i]; argvi == "-pch" ) pch = true;
+            if ( std::string const& argvi = argv[i]; argvi == "-startup" ) startup = true;
+            else if ( argvi == "-pch" ) pch = true;
             else if ( argvi == "-vcpkg" ) vcpkg = true;
             else if ( argvi == "-lib" ) lib = true;
             else if ( argvi == "-window" ) window = true;
@@ -161,7 +165,9 @@ int AddProject( int const argc, char* argv[] )
         }
     }
 
-    CHECK_FOR_ERROR( CreateProject( repositoryName, projectName, pch, vcpkg, lib, window ) )
+    SolutionGenerator::CheckVersion( repositoryName );
+
+    CHECK_FOR_ERROR( CreateProject( repositoryName, projectName, startup, pch, vcpkg, lib, window ) )
 
     CHECK_FOR_ERROR( AddDependency( repositoryName, projectName, dependencies ) )
 
@@ -180,7 +186,11 @@ int AddDependency( int const argc, char* argv[] )
     for ( unsigned char i = 4; i < argc; i++ )
         dependencies.push_back( argv[i] );
 
-    CHECK_FOR_ERROR( AddDependency( argv[2], argv[3], dependencies ) )
+    std::string const& repositoryName = argv[2];
+
+    SolutionGenerator::CheckVersion( repositoryName );
+
+    CHECK_FOR_ERROR( AddDependency( repositoryName, argv[3], dependencies ) )
 
     return 0;
 }
@@ -196,7 +206,11 @@ int AddPortVcpkg( int const argc, char* argv[] )
     for ( unsigned char i = 4; i < argc; i++ )
         ports.push_back( argv[i] );
 
-    CHECK_FOR_ERROR( AddPortVcpkg( argv[2], argv[3], ports ) )
+    std::string const& repositoryName = argv[2];
+
+    SolutionGenerator::CheckVersion( repositoryName );
+
+    CHECK_FOR_ERROR( AddPortVcpkg( repositoryName, argv[3], ports ) )
 
     return 0;
 }

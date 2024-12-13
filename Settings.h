@@ -2,7 +2,7 @@
 
 
 
-#define VERSION "1.17"
+#define VERSION "1.17.1"
 
 
 
@@ -34,7 +34,7 @@
     "|                                                                                                             |\n"\
     "|  -make [Repository] <project> <-open|-clear>                                                                |\n"\
     "|                                                                                                             |\n"\
-    "|  -addProject [Repository] [Project] <dependency_projects...> <-pch|-vcpkg|-lib|-window>                     |\n"\
+    "|  -addProject [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>            |\n"\
     "|                                                                                                             |\n"\
     "|  -addDependency [Repository] [Project] [Dependency_Project] <other_dependency_projects...>                  |\n"\
     "|                                                                                                             |\n"\
@@ -59,7 +59,7 @@
     "|    Repository - The name of the repository where the solution is going to be created                        |\n"\
     "|    Solution - The name of the solution to be created                                                        |\n"\
     "|    project - The name of the first project of the solution (default is the same as Solution)                |\n"\
-    "|    dependency_projects... -                                                                                 |\n"\
+    "|    dependency_projects... - The names of the projects you want to set as dependencies                       |\n"\
     "|    -pch - Whether or not to enable the precompiled header file                                              |\n"\
     "|    -vcpkg - Whether or not to enable vcpkg                                                                  |\n"\
     "|    -lib - Whether or not to make this project a static library                                              |\n"\
@@ -82,11 +82,12 @@
 #define HELP_ADD_PROJECT \
     "Action Description (AddProject) :"                                                                            "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
-    "|  -addProject [Repository] [Project] <dependency_projects...> <-pch|-vcpkg|-lib|-window>                     |\n"\
+    "|  -addProject [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>            |\n"\
     "|                                                                                                             |\n"\
     "|    Repository - The name of the repository folder                                                           |\n"\
     "|    Project - The name of the project to be added                                                            |\n"\
-    "|    dependency_projects... -                                                                                 |\n"\
+    "|    dependency_projects... - The names of the projects you want to set as dependencies                       |\n"\
+    "|    -startup - Whether or not this project will be the default startup project                               |\n"\
     "|    -pch - Whether or not to enable the precompiled header file                                              |\n"\
     "|    -vcpkg - Whether or not to enable vcpkg                                                                  |\n"\
     "|    -lib - Whether or not to make this project a static library                                              |\n"\
@@ -122,10 +123,11 @@
 
 #define CONFIG_SETTINGS( solutionName, solutionGuid ) (\
     "{"                                                    "\n"\
-    "    \"version\": " VERSION ","                        "\n"\
+    "    \"version\": \"" VERSION "\","                    "\n"\
     "    \"solution_name\": \"" + ( solutionName ) + "\"," "\n"\
     "    \"solution_guid\": \"" + ( solutionGuid ) + "\"," "\n"\
-    "    \"projects\": {}"                                 "\n"\
+    "    \"projects\": {},"                                "\n"\
+    "    \"startup_project\": \"\""                        "\n"\
     "}")
 
 #define PROJECT_CONFIG \
@@ -456,7 +458,7 @@
     "</Project>")
 
 #define CLCOMPILE_PCH_CPP( subFolder, fileName ) (\
-    "        <ClCompile Include=\"$(SolutionDir)..\\" + (subFolder) + "\\" + (fileName) + "\">"                                                                                                  "\n"\
+    "        <ClCompile Include=\"$(SolutionDir)..\\src\\" + (subFolder) + "\\" + (fileName) + "\">"                                                                                                  "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|Win32&apos;\">Create</PrecompiledHeader>"                                                       "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|Win32&apos;\">Create</PrecompiledHeader>"                                                     "\n"\
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;\">Create</PrecompiledHeader>"                                                         "\n"\
