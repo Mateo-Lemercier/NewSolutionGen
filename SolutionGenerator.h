@@ -24,12 +24,6 @@ int CreateRepository( std::string const& repositoryName,
 
 int CreateBats( std::string const& repositoryName );
 
-int CreateBats( std::string const& repositoryName,
-                std::string const& projectName );
-
-int CreateSolutionConfig( std::string const& repositoryName,
-                          std::string const& solutionName );
-
 int CreateProject( std::string const& repositoryName,
                    std::string const& projectName,
                    bool startup,
@@ -37,6 +31,12 @@ int CreateProject( std::string const& repositoryName,
                    bool vcpkg,
                    bool lib,
                    bool window );
+
+int CreateBats( std::string const& repositoryName,
+                std::string const& projectName );
+
+int DeleteBats( std::string const& repositoryName,
+                std::string const& projectName );
 
 int CreateProjectConfig( std::string const& repositoryName,
                          std::string const& projectName,
@@ -57,7 +57,42 @@ int CreateProjectSrc( std::string const& repositoryName,
 
 
 
-int AddDependency( std::string const& repositoryName,
+int EditProperties( std::string const& repositoryName,
+                    std::string const& projectName,
+                    std::vector<std::string> const& dependencies,
+                    bool startup,
+                    bool changePch,
+                    bool changeVcpkg,
+                    bool changeLib,
+                    bool changeWindow );
+
+int EnablePchProperty( nlohmann::json& settingsJson,
+                       std::string const& repositoryName,
+                       std::string const& projectName,
+                       bool window );
+
+int DisablePchProperty( nlohmann::json& settingsJson,
+                        std::string const& repositoryName,
+                        std::string const& projectName );
+
+int EnableVcpkgProperty( nlohmann::json& settingsJson,
+                         std::string const& repositoryName,
+                         std::string const& projectName );
+
+int DisableVcpkgProperty( nlohmann::json& settingsJson,
+                          std::string const& repositoryName,
+                          std::string const& projectName );
+
+int EnableLibProperty( nlohmann::json& settingsJson,
+                       std::string const& repositoryName,
+                       std::string const& projectName );
+
+int DisableLibProperty( nlohmann::json& settingsJson,
+                        std::string const& repositoryName,
+                        std::string const& projectName );
+
+int AddDependency( nlohmann::json& settingsJson,
+                   std::string const& repositoryName,
                    std::string const& projectName,
                    std::string const& dependency );
 
@@ -65,13 +100,26 @@ int AddDependency( std::string const& repositoryName,
                    std::string const& projectName,
                    std::vector<std::string> const& dependencies );
 
-int AddPortVcpkg( std::string const& repositoryName,
+int RemoveDependency( nlohmann::json& settingsJson,
+                      std::string const& projectName,
+                      std::string const& dependency );
+
+int RemoveDependency( std::string const& repositoryName,
+                      std::string const& projectName,
+                      std::vector<std::string> const& dependencies );
+
+int AddPortVcpkg( nlohmann::json& settingsJson,
+                  nlohmann::json& vcpkgJson,
+                  std::string const& repositoryName,
                   std::string const& projectName,
                   std::string const& port );
 
 int AddPortVcpkg( std::string const& repositoryName,
                   std::string const& projectName,
                   std::vector<std::string> const& ports );
+
+int RemoveProject( std::string const& repositoryName,
+                   std::string const& projectName );
 
 
 
@@ -86,7 +134,14 @@ int MakeSolution( std::string const& repositoryName,
 
 int MakeSolution( std::string const& repositoryName,
                   std::vector<std::array<std::string, 2>>& projects,
-                  nlohmann::json const& settingsJson );
+                  nlohmann::json const& settingsJson,
+                  bool clear,
+                  bool open );
+
+int AddDependenciesToSln( nlohmann::json const& settingsJson,
+                          std::string const& projectName,
+                          std::string& projectsForSln,
+                          std::vector<std::array<std::string, 2>>& projects );
 
 int MakeProject( std::string const& repositoryName,
                  std::string const& projectName,
@@ -94,16 +149,17 @@ int MakeProject( std::string const& repositoryName,
 
 int AddSrcToVcxproj( std::string const& srcPath,
                      std::string const& subFolder,
-                     std::ofstream& vcxproj );
+                     std::string& clIncludes,
+                     std::string& clCompiles,
+                     std::string& clIncludesFilters,
+                     std::string& clCompilesFilters );
 
 int AddResToVcxproj( std::string const& resPath,
                      std::string const& subFolder,
-                     std::ofstream& vcxproj );
-
-int AddDependenciesToSln( nlohmann::json const& settingsJson,
-                          std::string const& projectName,
-                          std::string& projectsForSln,
-                          std::vector<std::array<std::string, 2>>& projects );
+                     std::string& images,
+                     std::string& nones,
+                     std::string& imagesFilters,
+                     std::string& nonesFilters );
 
 
 }

@@ -2,14 +2,38 @@
 
 
 
-#define VERSION "1.17.1"
+#define VERSION "1.17.2"
 
 
+
+// Normal - 0
+// Bold - 1
+// Dark - 2
+// Underline - 4
+
+// Black Foreground - 30
+// Red Foreground - 31
+// Green Foreground - 32
+// Yellow Foreground - 33
+// Blue Foreground - 34
+// Magenta Foreground - 35
+// Cyan Foreground - 36
+// White Foreground - 37
+
+// Black Background - 40
+// Red Background - 41
+// Green Background - 42
+// Yellow Background - 43
+// Blue Background - 44
+// Magenta Background - 45
+// Cyan Background - 46
+// White Background - 47
 
 #define STYLE( style ) "\033[" style "m"
 #define STYLE_RESET STYLE( "0" )
 #define FG_ERROR STYLE( "31" )
 #define FG_SUCCESS STYLE( "32" )
+#define FG_SUBSUCCESS STYLE( "2;32" ) "  "
 #define FG_INPUT STYLE( "36" )
 
 
@@ -19,55 +43,56 @@
 // #define OPT( argument ) " <" argument ">"
 // #define LAST "               "
 
-#define HELP_START "\n"\
+#define HELP_START STYLE("1;2") "\n"\
     "Le Solution Generator est un outil permettant de generer des solutions Visual Studio."                        "\n"\
     "Utilisation : SolutionGen.exe -action [Required_Arguments] <optional_arguments>"                              "\n"\
     ""                                                                                                             "\n"\
 
-#define HELP_MESSAGE \
+#define HELP_MESSAGE HELP_START \
     "Available Actions :"                                                                                          "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
     "|                                                                                                             |\n"\
     "|  -help <action>                                                                                             |\n"\
     "|                                                                                                             |\n"\
-    "|  -create [Repository] [Solution] <project> <dependency_projects...> <-pch|-vcpkg|-lib|-window>              |\n"\
+    "|  -create [Repository] [Solution] <project> <-pch|-vcpkg|-lib|-window>                                       |\n"\
     "|                                                                                                             |\n"\
     "|  -make [Repository] <project> <-open|-clear>                                                                |\n"\
     "|                                                                                                             |\n"\
-    "|  -addProject [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>            |\n"\
+    "|  -add [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                   |\n"\
     "|                                                                                                             |\n"\
-    "|  -addDependency [Repository] [Project] [Dependency_Project] <other_dependency_projects...>                  |\n"\
+    "|  -edit [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                  |\n"\
     "|                                                                                                             |\n"\
     "|  -addPort [Repository] [Project] [Port] <other_ports...>                                                    |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "|  -remove [Repository] [Project]                                                                             |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
-#define HELP_HELP \
+#define HELP_HELP HELP_START \
     "Action Description (Help) :"                                                                                  "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
     "|  -help <action>                                                                                             |\n"\
     "|                                                                                                             |\n"\
     "|    action - The name of the action from which you want further informations                                 |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
-#define HELP_CREATE \
+#define HELP_CREATE HELP_START \
     "Action Description (Create) :"                                                                                "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
-    "|  -create [Repository] [Solution] <project> <dependency_projects...> <-pch|-vcpkg|-lib|-window>              |\n"\
+    "|  -create [Repository] [Solution] <project> <-pch|-vcpkg|-lib|-window>                                       |\n"\
     "|                                                                                                             |\n"\
     "|    Repository - The name of the repository where the solution is going to be created                        |\n"\
     "|    Solution - The name of the solution to be created                                                        |\n"\
     "|    project - The name of the first project of the solution (default is the same as Solution)                |\n"\
-    "|    dependency_projects... - The names of the projects you want to set as dependencies                       |\n"\
     "|    -pch - Whether or not to enable the precompiled header file                                              |\n"\
     "|    -vcpkg - Whether or not to enable vcpkg                                                                  |\n"\
     "|    -lib - Whether or not to make this project a static library                                              |\n"\
     "|    -window - Whether or to make this project a windows project                                              |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
-#define HELP_MAKE \
+#define HELP_MAKE HELP_START \
     "Action Description (Make) :"                                                                                  "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
     "|  -make [Repository] <project> <-open|-clear>                                                                |\n"\
@@ -77,12 +102,12 @@
     "|    -open - Whether or not the file explorer will open in the ide folder                                     |\n"\
     "|    -clear - Whether or not the ide folder will be deleted before generating the files                       |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
-#define HELP_ADD_PROJECT \
-    "Action Description (AddProject) :"                                                                            "\n"\
+#define HELP_ADD HELP_START \
+    "Action Description (Add) :"                                                                                   "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
-    "|  -addProject [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>            |\n"\
+    "|  -add [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                   |\n"\
     "|                                                                                                             |\n"\
     "|    Repository - The name of the repository folder                                                           |\n"\
     "|    Project - The name of the project to be added                                                            |\n"\
@@ -93,21 +118,25 @@
     "|    -lib - Whether or not to make this project a static library                                              |\n"\
     "|    -window - Whether or to make this project a windows project                                              |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
-#define HELP_ADD_DEPENDENCY \
-    "Action Description (AddDependency) :"                                                                         "\n"\
+#define HELP_EDIT HELP_START \
+    "Action Description (Edit) :"                                                                                  "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
-    "|  -addDependency [Repository] [Project] [Dependency_Project] <other_dependency_projects...>                  |\n"\
+    "|  -edit [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                  |\n"\
     "|                                                                                                             |\n"\
     "|    Repository - The name of the repository folder                                                           |\n"\
-    "|    Project - The name of the project to which the dependency will be added                                  |\n"\
-    "|    Dependency_Project - The name of the project to be added as a dependency                                 |\n"\
-    "|    other_dependency_projects... - As many other dependencies as you want                                    |\n"\
+    "|    Project - The name of the project you want to edit                                                       |\n"\
+    "|    dependency_projects... - The name of the projects to be added or removed as dependencies                 |\n"\
+    "|    -startup - Sets this project as the startup project                                                      |\n"\
+    "|    -pch - Enables or disables the precompiled header file                                                   |\n"\
+    "|    -vcpkg - Enables or disables vcpkg                                                                       |\n"\
+    "|    -lib - Turns this project into a static library or turns it back to a console project                    |\n"\
+    "|    -window - Turns this project into a windows project or turns it back to a console project                |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
-#define HELP_ADD_PORT \
+#define HELP_ADD_PORT HELP_START \
     "Action Description (AddPort) :"                                                                               "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
     "|  -addPort [Repository] [Project] [Port] <other_ports...>                                                    |\n"\
@@ -117,7 +146,17 @@
     "|    Port - The name of the vcpkg port to be added                                                            |\n"\
     "|    other_ports... - As many other ports as you want                                                         |\n"\
     "|                                                                                                             |\n"\
-    "+-------------------------------------------------------------------------------------------------------------+\n"
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
+
+#define HELP_REMOVE HELP_START \
+    "Action Description (Remove) :"                                                                                "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -remove [Repository] [Project]                                                                             |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    Project - The name of the project to remove                                                              |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
 
 
@@ -137,7 +176,11 @@
     "    \"vcpkg\": false,"                                "\n"\
     "    \"lib\": false,"                                  "\n"\
     "    \"window\": false,"                               "\n"\
-    "    \"dependencies\": []"                             "\n"\
+    /*"    \"filters\": ["                                   "\n"*/\
+    /*"        "                                             "\n"*/\
+    /*"    ],"                                               "\n"*/\
+    "    \"dependencies\": [],"                            "\n"\
+    "    \"dependents\": []"                               "\n"\
     "}"
 
 
@@ -154,7 +197,7 @@
     "#ifndef PCH_H"                          "\n"\
     "#define PCH_H"                          "\n"\
     ""                                       "\n"\
-    ""                                       "\n"\
+    "#include <windows.h>"                   "\n"\
     ""                                       "\n"\
     "#endif"
 
@@ -173,8 +216,8 @@
     "#endif"
 
 #define MAIN_CPP \
-    "#include \"main.h\""                    "\n"\
     "#include <iostream>"                    "\n"\
+    "#include \"main.h\""                    "\n"\
     ""                                       "\n"\
     "int main()"                             "\n"\
     "{"                                      "\n"\
@@ -193,20 +236,21 @@
     "}"
 
 #define MAIN_CPP_WINDOW \
-    "#include \"main.h\""                    "\n"\
-    ""                                       "\n"\
-    "int WinMain()"                          "\n"\
-    "{"                                      "\n"\
-    "    return 0;"                          "\n"\
+    "#include <windows.h>"                                                                 "\n"\
+    "#include \"main.h\""                                                                  "\n"\
+    ""                                                                                     "\n"\
+    "int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, int cmdShow)" "\n"\
+    "{"                                                                                    "\n"\
+    "    return 0;"                                                                        "\n"\
     "}"
 
 #define MAIN_CPP_PCH_WINDOW \
-    "#include \"pch.h\""                     "\n"\
-    "#include \"main.h\""                    "\n"\
-    ""                                       "\n"\
-    "int WinMain()"                          "\n"\
-    "{"                                      "\n"\
-    "    return 0;"                          "\n"\
+    "#include \"pch.h\""                                                                   "\n"\
+    "#include \"main.h\""                                                                  "\n"\
+    ""                                                                                     "\n"\
+    "int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR cmdLine, int cmdShow)" "\n"\
+    "{"                                                                                    "\n"\
+    "    return 0;"                                                                        "\n"\
     "}"
 
 
@@ -270,7 +314,7 @@
 
 
 
-#define VCXPROJ_1( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies ) (\
+#define VCXPROJ( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies, clIncludes, clCompiles, images, nones, projectReferences ) (\
     "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                      "\n"\
     "<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                "\n"\
     "    <ItemGroup Label=\"ProjectConfigurations\">"                                                                                                                                                 "\n"\
@@ -363,7 +407,7 @@
     "        <VcpkgEnabled>" + (vcpkgEnabled) + "</VcpkgEnabled>"                                                                                                                                     "\n"\
     "        <VcpkgEnableManifest>" + (vcpkgEnabled) + "</VcpkgEnableManifest>"                                                                                                                       "\n"\
     "        <VcpkgManifestRoot>$(SolutionDir)..\\config\\" + (projectName) + "</VcpkgManifestRoot>"                                                                                                  "\n"\
-    "        <VcpkgInstalledDir>$(SolutionDir)\\vcpkg_installed\\$(VcpkgTriplet)</VcpkgInstalledDir>"                                                                                                "\n"\
+    "        <VcpkgInstalledDir>$(SolutionDir)\\vcpkg_installed\\$(VcpkgTriplet)</VcpkgInstalledDir>"                                                                                                 "\n"\
     "    </PropertyGroup>"                                                                                                                                                                            "\n"\
     "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                                           "\n"\
     "        <ClCompile>"                                                                                                                                                                             "\n"\
@@ -445,12 +489,20 @@
     "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                          "\n"\
     "        </Link>"                                                                                                                                                                                 "\n"\
     "    </ItemDefinitionGroup>"                                                                                                                                                                      "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n")
-
-#define VCXPROJ_2( projectReferences ) (\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (clIncludes) +                                                                                                                                                                                      \
     "    </ItemGroup>"                                                                                                                                                                                "\n"\
     "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (projectReferences) +                                                                                                                                                                                 \
+    + (clCompiles) +                                                                                                                                                                                      \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (images) +                                                                                                                                                                                          \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (nones) +                                                                                                                                                                                           \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (projectReferences) +                                                                                                                                                                               \
     "    </ItemGroup>"                                                                                                                                                                                "\n"\
     "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />"                                                                                                                              "\n"\
     "    <ImportGroup Label=\"ExtensionTargets\">"                                                                                                                                                    "\n"\
@@ -465,12 +517,42 @@
     "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;\">Create</PrecompiledHeader>"                                                       "\n"\
     "        </ClCompile>"                                                                                                                                                                            "\n")
 
+#define VCXPROJ_FILTERS( clIncludes, clCompiles, images, nones ) (\
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                      "\n"\
+    "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                    "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    "        <Filter Include=\"Source Files\">"                                                                                                                                                       "\n"\
+    "            <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>"                                                                                                         "\n"\
+    "            <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>"                                                                                                     "\n"\
+    "        </Filter>"                                                                                                                                                                               "\n"\
+    "        <Filter Include=\"Header Files\">"                                                                                                                                                       "\n"\
+    "            <UniqueIdentifier>{93995380-89BD-4B04-88EB-625FBE52EBFB}</UniqueIdentifier>"                                                                                                         "\n"\
+    "            <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>"                                                                                                                        "\n"\
+    "        </Filter>"                                                                                                                                                                               "\n"\
+    "        <Filter Include=\"Images\">"                                                                                                                                                             "\n"\
+    "            <UniqueIdentifier>{6E901252-3135-5382-5769-143D295A57A6}</UniqueIdentifier>"                                                                                                         "\n"\
+    "            <Extensions>png;jpg;jpeg;dds;bmp;tif;tiff;gif;ico;svg</Extensions>"                                                                                                                  "\n"\
+    "        </Filter>"                                                                                                                                                                               "\n"\
+    "        <Filter Include=\"Resource Files\">"                                                                                                                                                     "\n"\
+    "            <UniqueIdentifier>{67DA6AB6-F800-4C08-8B7A-83BB121AAD01}</UniqueIdentifier>"                                                                                                         "\n"\
+    "            <Extensions>rc;cur;dlg;rc2;rct;bin;rgs;resx;wav;mfcribbon-ms</Extensions>"                                                                                                           "\n"\
+    "        </Filter>"                                                                                                                                                                               "\n"\
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (clIncludes) +                                                                                                                                                                                      \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (clCompiles) +                                                                                                                                                                                      \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (images) +                                                                                                                                                                                          \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
+    + (nones) +                                                                                                                                                                                           \
+    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "</Project>")
 
 
-// #define CHECK_FOR_ERROR( function ) \
-//     if ( std::string const errorMessage = function;\
-//          errorMessage.empty() == false )\
-//         return errorMessage
 
 #define ERROR_IF( function, message ) \
     if ( function )\

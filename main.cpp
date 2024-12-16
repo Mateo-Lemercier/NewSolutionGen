@@ -12,33 +12,33 @@ int Help( int const argc, char *argv[] )
 {
     if ( argc == 2 )
     {
-        std::cout << HELP_START << HELP_MESSAGE;
+        std::cout << HELP_MESSAGE;
         return 0;
     }
 
-    if ( argc != 3 ) return 1;
-
-    std::cout << HELP_START;
+    ERROR_IF( argc != 3, "Too many arguments\n" )
 
     if ( std::string const& action = argv[2]; action == "help" ) std::cout << HELP_HELP;
     else if ( action == "create" ) std::cout << HELP_CREATE;
     else if ( action == "make" ) std::cout << HELP_MAKE;
-    else if ( action == "addProject" ) std::cout << HELP_ADD_PROJECT;
-    else if ( action == "addDependency" ) std::cout << HELP_ADD_DEPENDENCY;
+    else if ( action == "add" ) std::cout << HELP_ADD;
+    else if ( action == "edit" ) std::cout << HELP_EDIT;
     else if ( action == "addPort" ) std::cout << HELP_ADD_PORT;
-    else return 1;
+    else if ( action == "remove" ) std::cout << HELP_REMOVE;
+    else { ERROR_IF( true, "Invalid action\n" ) }
 
     return 0;
 }
 
+
+
 int Create( int const argc, char *argv[] )
 {
-    if ( argc < 4 ) return 1;
+    ERROR_IF( argc < 4, "Not enough arguments\n" )
 
     std::string const& repositoryName = argv[2];
     std::string const& solutionName = argv[3];
     std::string projectName = solutionName;
-    std::vector<std::string> dependencies;
     bool pch = false;
     bool vcpkg = false;
     bool lib = false;
@@ -53,17 +53,6 @@ int Create( int const argc, char *argv[] )
         {
             projectName = argv4;
             startIndex++;
-
-            dependencies.reserve( argc-5 );
-
-            for ( unsigned char i = 5; i < argc; i++, startIndex++ )
-            {
-                std::string const& argvi = argv[i];
-                
-                if ( argvi[0] == '-' ) break;
-                
-                dependencies.push_back( argvi );
-            }
         }
 
         for ( unsigned char i = startIndex; i < argc; i++ )
@@ -78,16 +67,18 @@ int Create( int const argc, char *argv[] )
 
     CHECK_FOR_ERROR( CreateRepository( repositoryName, solutionName, projectName, pch, vcpkg, lib, window ) )
 
-    CHECK_FOR_ERROR( AddDependency( repositoryName, projectName, dependencies ) )
+    std::cout << "\n";
 
     CHECK_FOR_ERROR( MakeSolution( repositoryName, false, true ) )
 
     return 0;
 }
 
+
+
 int Make( int const argc, char *argv[] )
 {
-    if ( argc < 3 ) return 1;
+    ERROR_IF( argc < 3, "Not enough arguments\n" )
 
     std::string const& repositoryName = argv[2];
     bool clear = false;
@@ -122,9 +113,11 @@ int Make( int const argc, char *argv[] )
     return 0;
 }
 
-int AddProject( int const argc, char* argv[] )
+
+
+int Add( int const argc, char* argv[] )
 {
-    if ( argc < 4 ) return 1;
+    ERROR_IF( argc < 4, "Not enough arguments\n" )
 
     std::string const& repositoryName = argv[2];
     std::string const& projectName = argv[3];
@@ -144,9 +137,9 @@ int AddProject( int const argc, char* argv[] )
         {
             dependencies.reserve( argc-4 );
 
-            for ( unsigned char i = 4; i < argc; i++, startIndex++ )
+            for (; startIndex < argc; startIndex++ )
             {
-                std::string const& argvi = argv[i];
+                std::string const& argvi = argv[startIndex];
                 
                 if ( argvi[0] == '-' ) break;
                 
@@ -171,47 +164,92 @@ int AddProject( int const argc, char* argv[] )
 
     CHECK_FOR_ERROR( AddDependency( repositoryName, projectName, dependencies ) )
 
-    CHECK_FOR_ERROR( MakeSolution( repositoryName, false, false ) )
-
     return 0;
 }
 
-int AddDependency( int const argc, char* argv[] )
+
+
+int Edit( int const argc, char* argv[] )
 {
-    if ( argc < 5 ) return 1;
-
-    std::vector<std::string> dependencies;
-    dependencies.reserve( argc-4 );
-
-    for ( unsigned char i = 4; i < argc; i++ )
-        dependencies.push_back( argv[i] );
+    ERROR_IF( argc < 5, "Not enough arguments\n" )
 
     std::string const& repositoryName = argv[2];
+    std::string const& projectName = argv[3];
+    std::vector<std::string> dependencies;
+    bool startup = false;
+    bool pch = false;
+    bool vcpkg = false;
+    bool lib = false;
+    bool window = false;
+
+    unsigned char startIndex = 4;
+
+    if ( std::string const& argv4 = argv[4];
+         argv4[0] != '-' )
+    {
+        dependencies.reserve( argc-4 );
+
+        for (; startIndex < argc; startIndex++ )
+        {
+            std::string const& argvi = argv[startIndex];
+                
+            if ( argvi[0] == '-' ) break;
+                
+            dependencies.push_back( argvi );
+        }
+    }
+
+    for ( unsigned char i = startIndex; i < argc; i++ )
+    {
+        if ( std::string const& argvi = argv[i]; argvi == "-startup" ) startup = true;
+        else if ( argvi == "-pch" ) pch = true;
+        else if ( argvi == "-vcpkg" ) vcpkg = true;
+        else if ( argvi == "-lib" ) lib = true;
+        else if ( argvi == "-window" ) window = true;
+        else return 1;
+    }
 
     SolutionGenerator::CheckVersion( repositoryName );
 
-    CHECK_FOR_ERROR( AddDependency( repositoryName, argv[3], dependencies ) )
+    CHECK_FOR_ERROR( EditProperties( repositoryName, projectName, dependencies, startup, pch, vcpkg, lib, window ) )
 
     return 0;
 }
+
 
 
 int AddPortVcpkg( int const argc, char* argv[] )
 {
-    if ( argc < 5 ) return 1;
+    ERROR_IF( argc < 5, "Not enough arguments\n" )
 
+    std::string const& repositoryName = argv[2];
     std::vector<std::string> ports;
     ports.reserve( argc-4 );
 
     for ( unsigned char i = 4; i < argc; i++ )
         ports.push_back( argv[i] );
 
-    std::string const& repositoryName = argv[2];
-
     SolutionGenerator::CheckVersion( repositoryName );
 
     CHECK_FOR_ERROR( AddPortVcpkg( repositoryName, argv[3], ports ) )
 
+    return 0;
+}
+
+
+
+int Remove( int const argc, char* argv[] )
+{
+    ERROR_IF( argc < 4, "Not enough arguments\n" )
+    ERROR_IF( argc > 4, "To many arguments\n" )
+
+    std::string const& repositoryName = argv[2];
+    std::string const& projectName = argv[3];
+
+    SolutionGenerator::CheckVersion( repositoryName );
+
+    CHECK_FOR_ERROR( RemoveProject( repositoryName, projectName ) )
+    
     return 0;
 }
 
@@ -224,16 +262,17 @@ int main( int const argc, char *argv[] )
     if ( argc == 1 )
     {
         // SolutionGenerator.exe
-        return 0;
+        ERROR_IF( true, "Not enough arguments\n" )
     }
-
+    
     std::string const& action = argv[1];
     if ( action == "-help" ) return Help( argc, argv );
     if ( action == "-create" ) return Create( argc, argv );
     if ( action == "-make") return Make( argc, argv );
-    if ( action == "-addProject" ) return AddProject( argc, argv );
-    if ( action == "-addDependency" ) return AddDependency( argc, argv );
+    if ( action == "-add" ) return Add( argc, argv );
+    if ( action == "-edit" ) return Edit( argc, argv );
     if ( action == "-addPort" ) return AddPortVcpkg( argc, argv );
+    if ( action == "-remove" ) return Remove( argc, argv );
 
-    return 0;
+    ERROR_IF( true, "Invalid action\n" )
 }
