@@ -82,7 +82,7 @@ void CheckVersion( std::string const& repositoryName )
         }
     }
 
-    if ( version == "1.17.1" || versionChanged )
+    if ( versionChanged || version == "1.17.1" )
     {
         versionChanged = true;
 
@@ -124,6 +124,28 @@ void CheckVersion( std::string const& repositoryName )
             }    
         }
         // // TODO Add "filters" property to every single project settings
+    }
+
+    if ( versionChanged || version == "1.17.2" )
+    {
+        versionChanged = true;
+
+        for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
+        {
+            std::vector<std::string> dependents = settingsJson["projects"][project.first]["dependents"];
+
+            for ( std::string const& dependency : static_cast<std::vector<std::string>>( project.second["dependencies"] ) )
+            {
+                if ( std::find( dependents.begin(), dependents.end(), dependency ) == dependents.end() )
+                {
+                    // RemoveDependency( settingsJson,  );// TOD FINISH
+                    continue;
+                }
+
+                if ( dependency == project.first )
+                    RemoveDependency( settingsJson, project.first, dependency );
+            }
+        }
     }
 
     version = VERSION;
@@ -215,7 +237,7 @@ int CreateProject( std::string const& repositoryName,
                    bool const lib,
                    bool const window )
 {
-    ERROR_IF( lib && window, "You can't have a static library project also be a window project" )
+    ERROR_IF( lib && window, "You can't have a static library project also be a window project\n" )
     
     CHECK_FOR_ERROR( CreateProjectConfig( repositoryName, projectName, startup, pch, vcpkg, lib, window ) )
 
@@ -228,6 +250,72 @@ int CreateProject( std::string const& repositoryName,
 
     std::cout << FG_SUCCESS "Project (" + projectName + ") created successfully\n" STYLE_RESET;
 
+    return 0;
+}
+
+
+
+int RemoveProject( std::string const& repositoryName,
+                   std::string const& projectName )
+{
+    std::string const settingsPath = repositoryName + "/config/settings.json";
+
+    std::ifstream settingsFileRead( settingsPath );
+    nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
+    settingsFileRead.close();
+
+    ERROR_IF( settingsJson["projects"].size() == 1, "Project (" + projectName + ") can't be removed because it's the last project of the solution\n" )
+    ERROR_IF( settingsJson["projects"].contains( projectName ) == false, "Project (" + projectName + ") doesn't exist in this repository (" + repositoryName + ")\n" )
+
+    if ( std::vector<std::string> const& dependents = settingsJson["projects"][projectName]["dependents"];
+         dependents.empty() == false )
+    {
+        while ( true )
+        {
+            std::string answer;
+            std::cout << FG_INPUT "Project (" + projectName + ") has dependents, do you wish to continue and remove their dependency to this project ? (o/n)\n" STYLE_RESET;
+            std::cin >> answer;
+
+            if ( answer == "o" || answer == "O" ) break;
+
+            if ( answer != "n" && answer != "N" ) continue;
+
+            return 1;
+        }
+
+        for ( std::string const& dependent : dependents )
+            CHECK_FOR_ERROR( RemoveDependency( settingsJson, dependent, projectName ) )
+    }
+
+    CHECK_FOR_ERROR( RemoveDependency( repositoryName, projectName, settingsJson["projects"][projectName]["dependencies"] ) )
+
+    if ( settingsJson["projects"][projectName]["vcpkg"] ) CHECK_FOR_ERROR( DisableVcpkgProperty( settingsJson, repositoryName, projectName ) )
+    
+    std::error_code error;
+    fs::remove_all( repositoryName + "/src/" + projectName, error );
+    ERROR_IF( error, "Could not delete project (" + projectName + ")'s src folder\n" )
+        
+    std::cout << FG_SUBSUCCESS "Project (" + projectName + ")'s src folder deleted successfully\n" STYLE_RESET;
+
+    fs::remove_all( repositoryName + "/res/" + projectName, error );
+    ERROR_IF( error, "Could not delete project (" + projectName + ")'s res folder\n" )
+        
+    std::cout << FG_SUBSUCCESS "Project (" + projectName + ")'s res folder deleted successfully\n" STYLE_RESET;
+
+    if ( settingsJson["projects"][projectName]["lib"] == false )
+        CHECK_FOR_ERROR( DeleteBats( repositoryName, projectName ) )
+
+    settingsJson["projects"].erase( projectName );
+
+    if ( settingsJson["startup_project"] == projectName )
+        settingsJson["startup_project"] = static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ).begin()->first;
+
+    std::ofstream settingsFileWrite( settingsPath );
+    settingsFileWrite << std::setw(4) << settingsJson;
+    settingsFileWrite.close();
+    
+    std::cout << FG_SUCCESS "Project (" + projectName + ") successfully deleted\n" STYLE_RESET;
+    
     return 0;
 }
 
@@ -293,13 +381,15 @@ int CreateProjectConfig( std::string const& repositoryName,
                          bool const lib,
                          bool const window )
 {
-    if ( vcpkg ) CHECK_FOR_ERROR( CreateVcpkgJson( repositoryName, projectName ) )
-
     std::string const settingsPath = repositoryName + "/config/settings.json";
     
     std::ifstream settingsFileRead( settingsPath );
     nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
     settingsFileRead.close();
+
+    ERROR_IF( settingsJson["projects"].contains( projectName ), "Project (" + projectName + ") already exists in this repository (" + repositoryName + ")\n" )
+
+    if ( vcpkg ) CHECK_FOR_ERROR( CreateVcpkgJson( repositoryName, projectName ) )
 
     std::string guid = GenerateGuid();
 
@@ -316,12 +406,7 @@ int CreateProjectConfig( std::string const& repositoryName,
 
     std::cout << FG_SUBSUCCESS "Project (" + projectName + ") successfully added to settings.json\n" STYLE_RESET;
 
-    if ( startup )
-    {
-        settingsJson["startup_project"] = projectName;
-
-        std::cout << FG_SUBSUCCESS "Project (" + projectName + ") successfully set as startup project\n" STYLE_RESET;
-    }
+    if ( startup ) CHECK_FOR_ERROR( EditProperties( repositoryName, projectName, std::vector<std::string>(), true, false, false, false, false ) )
 
     return 0;
 }
@@ -441,7 +526,6 @@ int EditProperties( std::string const& repositoryName,
     if ( startup )
     {
         settingsJson["startup_project"] = projectName;
-
         std::cout << FG_SUBSUCCESS "Project (" + projectName + ") successfully set as startup project\n" STYLE_RESET;
     }
 
@@ -468,7 +552,7 @@ int EditProperties( std::string const& repositoryName,
     bool window = settingsJson["projects"][projectName]["window"];
 
     ERROR_IF( ( ( changeLib == false && lib ) || ( changeLib && lib == false ) ) && ( ( changeWindow == false && window ) || ( changeWindow && window == false ) ),
-              "You can't have a static library project also be a window project" )
+              "You can't have a static library project also be a window project\n" )
 
     if ( changeWindow )
     {
@@ -532,6 +616,8 @@ int EnablePchProperty( nlohmann::json& settingsJson,
 
     settingsJson["projects"][projectName]["pch"] = true;
 
+    // std::cout << FG_SUCCESS "Project (" + projectName + ")'s pch enabled successfully\n" STYLE_RESET;
+
     return 0;
 }
 
@@ -550,7 +636,7 @@ int DisablePchProperty( nlohmann::json& settingsJson,
 
         if ( answer == "o" || answer == "O" ) break;
 
-        if ( answer != "n" || answer != "N" ) continue;
+        if ( answer != "n" && answer != "N" ) continue;
 
         settingsJson["projects"][projectName]["pch"] = false;
 
@@ -562,18 +648,20 @@ int DisablePchProperty( nlohmann::json& settingsJson,
     if ( std::string const pchhPath = srcPath + "/pch.h";
          fs::exists( pchhPath ) )
     {
-        ERROR_IF( fs::remove( pchhPath ), "Could not delete project (" + projectName + ")'s pch.h\n" )
+        ERROR_IF( fs::remove( pchhPath ) == false, "Could not delete project (" + projectName + ")'s pch.h\n" )
         std::cout << FG_SUBSUCCESS "Project (" + projectName + ")'s pch.h deleted successfully\n" STYLE_RESET;
     }
             
     if ( std::string const pchcppPath = srcPath + "/pch.cpp";
          fs::exists( pchcppPath ) )
     {
-        ERROR_IF( fs::remove( pchcppPath ), "Could not delete project (" + projectName + ")'s pch.cpp\n" )
+        ERROR_IF( fs::remove( pchcppPath ) == false, "Could not delete project (" + projectName + ")'s pch.cpp\n" )
         std::cout << FG_SUBSUCCESS "Project (" + projectName + ")'s pch.cpp deleted successfully\n" STYLE_RESET;
     }
 
     settingsJson["projects"][projectName]["pch"] = false;
+
+    // std::cout << FG_SUCCESS "Project (" + projectName + ")'s pch disabled successfully\n" STYLE_RESET;
 
     return 0;
 }
@@ -604,7 +692,7 @@ int DisableVcpkgProperty( nlohmann::json& settingsJson,
     for ( nlohmann::json const& dependency : settingsJson["projects"][projectName]["dependencies"] )
     {
         std::string const& dependencyName = dependency;
-        ERROR_IF( settingsJson["projects"][dependencyName]["vcpkg"], "You cannot disable project (" + projectName + ")'s vcpkg because it has a dependency that requires vcpkg (" + dependencyName + ")" )
+        ERROR_IF( settingsJson["projects"][dependencyName]["vcpkg"], "You cannot disable project (" + projectName + ")'s vcpkg because it has a dependency that requires vcpkg (" + dependencyName + ")\n" )
     }
     
     if ( std::string const projectConfigPath = repositoryName + "/config/" + projectName;
@@ -618,6 +706,8 @@ int DisableVcpkgProperty( nlohmann::json& settingsJson,
     }
 
     settingsJson["projects"][projectName]["vcpkg"] = false;
+
+    // std::cout << FG_SUCCESS "Project (" + projectName + ")'s vcpkg disabled successfully\n" STYLE_RESET;
 
     return 0;
 }
@@ -655,11 +745,10 @@ int AddDependency( nlohmann::json& settingsJson,
                    std::string const& projectName,
                    std::string const& dependency )
 {
-    if ( settingsJson["projects"][dependency]["lib"] == false )
-    {
-        std::cout << FG_ERROR "You can't add a non-library project (" + dependency + ") as a dependency\n" STYLE_RESET;
-        return 1;
-    }
+    std::vector<std::string> dependencyDependencies = settingsJson["projects"][dependency]["dependencies"];
+    ERROR_IF( settingsJson["projects"][dependency]["lib"] == false, "You can't add a non-library project (" + dependency + ") as a dependency\n" )
+    ERROR_IF( std::find( dependencyDependencies.begin(), dependencyDependencies.end(), projectName ) != dependencyDependencies.end(), "Projects can't have looping dependencies (project " + dependency + " already depends on project " + projectName + ")\n" )
+    ERROR_IF( dependency == projectName, "You can't make a project (" + projectName + ") depends on itself\n" )
 
     if ( settingsJson["projects"][dependency]["vcpkg"] && settingsJson["projects"][projectName]["vcpkg"] == false )
         CHECK_FOR_ERROR( EnableVcpkgProperty( settingsJson, repositoryName, projectName ) )
@@ -778,72 +867,6 @@ int AddPortVcpkg( std::string const& repositoryName,
     vcpkgFileWrite << std::setw(4) << vcpkgJson;
     vcpkgFileWrite.close();
 
-    return 0;
-}
-
-
-
-int RemoveProject( std::string const& repositoryName,
-                   std::string const& projectName )
-{
-    std::string const settingsPath = repositoryName + "/config/settings.json";
-
-    std::ifstream settingsFileRead( settingsPath );
-    nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
-    settingsFileRead.close();
-
-    ERROR_IF( settingsJson["projects"].size() == 1, "Project (" + projectName + ") can't be removed because it's the last project of the solution\n" )
-
-    if ( std::vector<std::string> const& dependents = settingsJson["projects"][projectName]["dependents"];
-         dependents.empty() == false )
-    {
-        while ( true )
-        {
-            std::string answer;
-            std::cout << FG_INPUT "Project (" + projectName + ") has dependents, do you wish to continue and remove their dependency to this project ? (o/n)\n" STYLE_RESET;
-            std::cin >> answer;
-
-            if ( answer == "o" || answer == "O" ) break;
-
-            if ( answer != "n" && answer != "N" ) continue;
-
-            return 1;
-        }
-
-        for ( std::string const& dependent : dependents )
-            CHECK_FOR_ERROR( RemoveDependency( settingsJson, dependent, projectName ) )
-    }
-
-    CHECK_FOR_ERROR( RemoveDependency( repositoryName, projectName, settingsJson["projects"][projectName]["dependencies"] ) )
-
-    if ( settingsJson["projects"][projectName]["vcpkg"] )
-        CHECK_FOR_ERROR( DisableVcpkgProperty( settingsJson, repositoryName, projectName ) )
-    
-    std::error_code error;
-    fs::remove_all( repositoryName + "/src/" + projectName, error );
-    ERROR_IF( error, "Could not delete project (" + projectName + ")'s src folder\n" )
-        
-    std::cout << FG_SUBSUCCESS "Project (" + projectName + ")'s src folder deleted successfully\n" STYLE_RESET;
-
-    fs::remove_all( repositoryName + "/res/" + projectName, error );
-    ERROR_IF( error, "Could not delete project (" + projectName + ")'s res folder\n" )
-        
-    std::cout << FG_SUBSUCCESS "Project (" + projectName + ")'s res folder deleted successfully\n" STYLE_RESET;
-
-    if ( settingsJson["projects"][projectName]["lib"] == false )
-        CHECK_FOR_ERROR( DeleteBats( repositoryName, projectName ) )
-
-    settingsJson["projects"].erase( projectName );
-
-    if ( settingsJson["startup_project"] == projectName )
-        settingsJson["startup_project"] = static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ).begin()->first;
-
-    std::ofstream settingsFileWrite( settingsPath );
-    settingsFileWrite << std::setw(4) << settingsJson;
-    settingsFileWrite.close();
-    
-    std::cout << FG_SUCCESS "Project (" + projectName + ") successfully deleted\n" STYLE_RESET;
-    
     return 0;
 }
 

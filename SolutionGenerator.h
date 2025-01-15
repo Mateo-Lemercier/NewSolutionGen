@@ -32,6 +32,9 @@ int CreateProject( std::string const& repositoryName,
                    bool lib,
                    bool window );
 
+int RemoveProject( std::string const& repositoryName,
+                   std::string const& projectName );
+
 int CreateBats( std::string const& repositoryName,
                 std::string const& projectName );
 
@@ -117,9 +120,6 @@ int AddPortVcpkg( nlohmann::json& settingsJson,
 int AddPortVcpkg( std::string const& repositoryName,
                   std::string const& projectName,
                   std::vector<std::string> const& ports );
-
-int RemoveProject( std::string const& repositoryName,
-                   std::string const& projectName );
 
 
 
