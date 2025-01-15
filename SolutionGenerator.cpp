@@ -126,27 +126,27 @@ void CheckVersion( std::string const& repositoryName )
         // // TODO Add "filters" property to every single project settings
     }
 
-    if ( versionChanged || version == "1.17.2" )
-    {
-        versionChanged = true;
+    //if ( versionChanged || version == "1.17.2" )
+    //{
+    //    versionChanged = true;
 
-        for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
-        {
-            std::vector<std::string> dependents = settingsJson["projects"][project.first]["dependents"];
+    //    for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
+    //    {
+    //        std::vector<std::string> dependents = settingsJson["projects"][project.first]["dependents"];
 
-            for ( std::string const& dependency : static_cast<std::vector<std::string>>( project.second["dependencies"] ) )
-            {
-                if ( std::find( dependents.begin(), dependents.end(), dependency ) == dependents.end() )
-                {
-                    // RemoveDependency( settingsJson,  );// TOD FINISH
-                    continue;
-                }
+    //        for ( std::string const& dependency : static_cast<std::vector<std::string>>( project.second["dependencies"] ) )
+    //        {
+    //            if ( std::find( dependents.begin(), dependents.end(), dependency ) == dependents.end() )
+    //            {
+    //                // RemoveDependency( settingsJson,  );// TOD FINISH
+    //                continue;
+    //            }
 
-                if ( dependency == project.first )
-                    RemoveDependency( settingsJson, project.first, dependency );
-            }
-        }
-    }
+    //            if ( dependency == project.first )
+    //                RemoveDependency( settingsJson, project.first, dependency );
+    //        }
+    //    }
+    //}
 
     version = VERSION;
 
