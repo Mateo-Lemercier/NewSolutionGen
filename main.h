@@ -12,6 +12,8 @@ int Add( int argc, char* argv[] );
 
 int Edit( int argc, char* argv[] );
 
+int Rename( int argc, char* argv[] );
+
 int AddPortVcpkg( int argc, char* argv[] );
 
 int Remove( int argc, char* argv[] );

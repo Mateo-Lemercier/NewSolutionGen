@@ -62,6 +62,8 @@
     "|                                                                                                             |\n"\
     "|  -edit [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                  |\n"\
     "|                                                                                                             |\n"\
+    "|  -rename [Repository] [Project] [Name]                                                                      |\n"\
+    "|                                                                                                             |\n"\
     "|  -addPort [Repository] [Project] [Port] <other_ports...>                                                    |\n"\
     "|                                                                                                             |\n"\
     "|  -remove [Repository] [Project]                                                                             |\n"\
@@ -133,6 +135,17 @@
     "|    -vcpkg - Enables or disables vcpkg                                                                       |\n"\
     "|    -lib - Turns this project into a static library or turns it back to a console project                    |\n"\
     "|    -window - Turns this project into a windows project or turns it back to a console project                |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
+
+#define HELP_RENAME HELP_START \
+    "Action Description (Rename) :"                                                                                "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -rename [Repository] [Project] [Name]                                                                      |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    Project - The name of the project you want to rename                                                     |\n"\
+    "|    Name - The new name that should be given to the project                                                  |\n"\
     "|                                                                                                             |\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 

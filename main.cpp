@@ -18,13 +18,14 @@ int Help( int const argc, char *argv[] )
 
     ERROR_IF( argc != 3, "Too many arguments\n" )
 
-    if ( std::string const& action = argv[2]; action == "help" ) std::cout << HELP_HELP;
-    else if ( action == "create" ) std::cout << HELP_CREATE;
-    else if ( action == "make" ) std::cout << HELP_MAKE;
-    else if ( action == "add" ) std::cout << HELP_ADD;
-    else if ( action == "edit" ) std::cout << HELP_EDIT;
-    else if ( action == "addPort" ) std::cout << HELP_ADD_PORT;
-    else if ( action == "remove" ) std::cout << HELP_REMOVE;
+    if ( std::string const& action = argv[2]; action == "help" || action == "-help" ) std::cout << HELP_HELP;
+    else if ( action == "create" || action == "-create" ) std::cout << HELP_CREATE;
+    else if ( action == "make" || action == "-make" ) std::cout << HELP_MAKE;
+    else if ( action == "add" || action == "-add" ) std::cout << HELP_ADD;
+    else if ( action == "edit" || action == "-edit" ) std::cout << HELP_EDIT;
+    else if ( action == "rename" || action == "-rename" ) std::cout << HELP_RENAME;
+    else if ( action == "addPort" || action == "-addPort" ) std::cout << HELP_ADD_PORT;
+    else if ( action == "remove" || action == "-remove" ) std::cout << HELP_REMOVE;
     else { ERROR_IF( true, "Invalid action\n" ) }
 
     return 0;
@@ -218,6 +219,21 @@ int Edit( int const argc, char* argv[] )
 
 
 
+int Rename( int const argc, char* argv[] )
+{
+    ERROR_IF( argc != 5, "Not enough arguments\n" )
+
+    std::string const& repositoryName = argv[2];
+    std::string const& projectName = argv[3];
+    std::string const& newName = argv[4];
+
+    SolutionGenerator::CheckVersion( repositoryName );
+
+    CHECK_FOR_ERROR( RenameProject( repositoryName, projectName, newName ) )
+}
+
+
+
 int AddPortVcpkg( int const argc, char* argv[] )
 {
     ERROR_IF( argc < 5, "Not enough arguments\n" )
@@ -271,6 +287,7 @@ int main( int const argc, char *argv[] )
     if ( action == "-make") return Make( argc, argv );
     if ( action == "-add" ) return Add( argc, argv );
     if ( action == "-edit" ) return Edit( argc, argv );
+    if ( action == "-rename" ) return Rename( argc, argv );
     if ( action == "-addPort" ) return AddPortVcpkg( argc, argv );
     if ( action == "-remove" ) return Remove( argc, argv );
 

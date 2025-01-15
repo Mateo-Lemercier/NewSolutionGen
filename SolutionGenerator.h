@@ -32,6 +32,10 @@ int CreateProject( std::string const& repositoryName,
                    bool lib,
                    bool window );
 
+int RenameProject( std::string const& repositoryName,
+                   std::string const& projectName,
+                   std::string const& newName );
+
 int RemoveProject( std::string const& repositoryName,
                    std::string const& projectName );
 
