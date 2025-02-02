@@ -167,6 +167,19 @@ void CheckVersion( std::string const& repositoryName )
         }
     }
 
+    if ( versionChanged || version == "1.17.3" )
+    {
+        std::map<std::string, nlohmann::json> const& projects = settingsJson["projects"];
+        
+        for ( auto const& project : projects )
+        {
+            settingsJson["projects"][project.first]["preprocessorDefinitions"] = std::vector<std::string>();
+            settingsJson["projects"][project.first]["additionalIncludeDirectories"] = std::vector<std::string>();
+            settingsJson["projects"][project.first]["additionalLibraryDirectories"] = std::vector<std::string>();
+            settingsJson["projects"][project.first]["additionalDependencies"] = std::vector<std::string>();
+        }
+    }
+
     version = VERSION;
 
     std::ofstream settingsFileWrite( configPath );
@@ -1118,22 +1131,36 @@ int MakeProject( std::string const& repositoryName,
     std::string const& guid = settingsJson["projects"][projectName]["guid"];
 
     bool const pch = settingsJson["projects"][projectName]["pch"];
-    std::string const precompiledHeader = pch ? "Use" : "NotUsing";
-
     bool const vcpkg = settingsJson["projects"][projectName]["vcpkg"];
-    std::string const vcpkgEnabled = vcpkg ? "true" : "false";
-
     bool const lib = settingsJson["projects"][projectName]["lib"];
-    std::string const configurationType = lib ? "StaticLibrary" : "Application";
-
     bool const window = settingsJson["projects"][projectName]["window"];
-    std::string const preprocessorDefinitions = window ? ( lib ? "LIB" : "WINDOWS" ) : "CONSOLE";
+
+    std::string const precompiledHeader = pch ? "Use" : "NotUsing";
+    std::string const vcpkgEnabled = vcpkg ? "true" : "false";
+    std::string const configurationType = lib ? "StaticLibrary" : "Application";
+    std::string preprocessorDefinitions = window ? ( lib ? "_LIB;" : "_WINDOWS;" ) : "_CONSOLE;";
     std::string const subSystem = window ? "Windows" : "Console";
 
     std::string additionalIncludeDirectories;
     std::string additionalLibraryDirectories;
     std::string additionalDependencies;
     std::string projectReferences;
+
+    std::vector<std::string> const& preprocessorDefinitionsList = settingsJson["projects"][projectName]["preprocessorDefinitions"];
+    for ( std::string const& preprocessorDefinition : preprocessorDefinitionsList )
+        preprocessorDefinitions += preprocessorDefinition + ";";
+
+    std::vector<std::string> const& additionalIncludeDirectoriesList = settingsJson["projects"][projectName]["additionalIncludeDirectories"];
+    for ( std::string const& additionalIncludeDirectory : additionalIncludeDirectoriesList )
+        additionalIncludeDirectories += additionalIncludeDirectory + ";";
+
+    std::vector<std::string> const& additionalLibraryDirectoriesList = settingsJson["projects"][projectName]["additionalLibraryDirectories"];
+    for ( std::string const& additionalLibraryDirectory : additionalLibraryDirectoriesList )
+        additionalLibraryDirectories += additionalLibraryDirectory + ";";
+
+    std::vector<std::string> const& additionalDependenciesList = settingsJson["projects"][projectName]["additionalDependencies"];
+    for ( std::string const& additionalDependency : additionalDependenciesList )
+        additionalDependencies += additionalDependency + ";";
 
     for ( nlohmann::json const& dependency : settingsJson["projects"][projectName]["dependencies"] )
     {
