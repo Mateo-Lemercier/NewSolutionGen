@@ -1,7 +1,8 @@
-﻿#ifndef SOLUTION_GENERATOR_H_INCLUDED
+#ifndef SOLUTION_GENERATOR_H_INCLUDED
 #define SOLUTION_GENERATOR_H_INCLUDED
 
 #include "Json.hpp"
+#include <string>
 
 namespace SolutionGenerator {
 

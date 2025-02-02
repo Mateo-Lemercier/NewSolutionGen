@@ -1,5 +1,7 @@
-﻿#include "NumberToHex.h"
+#include "Utils.h"
 #include <iostream>
+namespace Utils {
+
 
 
 void NumberToHex( unsigned short const number, std::string& appendTo )
@@ -14,4 +16,8 @@ void NumberToHex( unsigned short const number, std::string& appendTo )
         else character += 'A' - 10;
         appendTo += character;
     }
+}
+
+
+
 }

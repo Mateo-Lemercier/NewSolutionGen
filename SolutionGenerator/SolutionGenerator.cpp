@@ -1,9 +1,9 @@
-﻿#include <string>
+#include <string>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <windows.h>
-#include "NumberToHex.h"
+#include "Utils.h"
 #include "Settings.h"
 #include "SolutionGenerator.h"
 namespace fs = std::filesystem;
@@ -14,18 +14,18 @@ namespace SolutionGenerator {
 std::string GenerateGuid()
 {
     std::string result;
-    NumberToHex( rand(), result );
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
-    NumberToHex( rand(), result );
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     return result;
 }
 
@@ -169,14 +169,22 @@ void CheckVersion( std::string const& repositoryName )
 
     if ( versionChanged || version == "1.17.3" )
     {
-        std::map<std::string, nlohmann::json> const& projects = settingsJson["projects"];
+        fs::remove_all( repositoryName + "/bin" );
+        fs::create_directory( repositoryName + "/bin" );
         
+        CreateBats( repositoryName );
+        
+        std::map<std::string, nlohmann::json> const& projects = settingsJson["projects"];
         for ( auto const& project : projects )
         {
             settingsJson["projects"][project.first]["preprocessorDefinitions"] = std::vector<std::string>();
             settingsJson["projects"][project.first]["additionalIncludeDirectories"] = std::vector<std::string>();
             settingsJson["projects"][project.first]["additionalLibraryDirectories"] = std::vector<std::string>();
             settingsJson["projects"][project.first]["additionalDependencies"] = std::vector<std::string>();
+
+            if ( project.second["lib"] ) continue;
+
+            CreateBats( repositoryName, project.first );
         }
     }
 
@@ -243,7 +251,7 @@ int CreateBats( std::string const& repositoryName )
     std::ofstream makeFileWrite( repositoryName + "/bin/make.bat" );
     makeFileWrite <<
         "cd ../.."                            "\n"
-        "SolutionGen.exe -make " + repositoryName;
+        "SolutionGenerator.exe -make " + repositoryName;
     makeFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make.bat created successfully\n" STYLE_RESET;
@@ -251,7 +259,7 @@ int CreateBats( std::string const& repositoryName )
     std::ofstream makeClearFileWrite( repositoryName + "/bin/make-clear.bat" );
     makeClearFileWrite <<
         "cd ../.."                                       "\n"
-        "SolutionGen.exe -make " + repositoryName + " -clear";
+        "SolutionGenerator.exe -make " + repositoryName + " -clear";
     makeClearFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make-clear.bat created successfully\n" STYLE_RESET;
@@ -429,7 +437,7 @@ int CreateBats( std::string const& repositoryName,
     std::ofstream makeFileWrite( repositoryName + "/bin/make-" + projectNameLowerCase + ".bat" );
     makeFileWrite <<
         "cd ../.."                                                "\n"
-        "SolutionGen.exe -make " + repositoryName + " " + projectName;
+        "SolutionGenerator.exe -make " + repositoryName + " " + projectName;
     makeFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make-" + projectNameLowerCase + ".bat created successfully\n" STYLE_RESET;
@@ -437,7 +445,7 @@ int CreateBats( std::string const& repositoryName,
     std::ofstream makeClearFileWrite( repositoryName + "/bin/make-" + projectNameLowerCase + "-clear.bat" );
     makeClearFileWrite <<
         "cd ../.."                                                           "\n"
-        "SolutionGen.exe -make " + repositoryName + " " + projectName + " -clear";
+        "SolutionGenerator.exe -make " + repositoryName + " " + projectName + " -clear";
     makeClearFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make-" + projectNameLowerCase + "-clear.bat created successfully\n" STYLE_RESET;
