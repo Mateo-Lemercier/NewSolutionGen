@@ -1,4 +1,4 @@
-﻿#include <vector>
+#include <vector>
 #include <string>
 #include <iostream>
 #include <ctime>
@@ -9,23 +9,25 @@
 
 
 int Help( int const argc, char *argv[] )
-{
-    if ( argc == 2 )
+{       
+    
+    if ( argc <= 2 )
     {
         std::cout << HELP_MESSAGE;
         return 0;
     }
 
-    ERROR_IF( argc != 3, "Too many arguments\n" )
+    ERROR_IF( argc != 3, "Too many arguments\n" << STYLE_RESET << HELP_MESSAGE )
 
-    if ( std::string const& action = argv[2]; action == "help" ) std::cout << HELP_HELP;
-    else if ( action == "create" ) std::cout << HELP_CREATE;
-    else if ( action == "make" ) std::cout << HELP_MAKE;
-    else if ( action == "add" ) std::cout << HELP_ADD;
-    else if ( action == "edit" ) std::cout << HELP_EDIT;
-    else if ( action == "addPort" ) std::cout << HELP_ADD_PORT;
-    else if ( action == "remove" ) std::cout << HELP_REMOVE;
-    else { ERROR_IF( true, "Invalid action\n" ) }
+    if ( std::string const& action = argv[2]; action == "help" || action == "-help" || action =="-h" ) std::cout << HELP_HELP;
+    else if ( action == "create" || action == "-create" ) std::cout << HELP_CREATE;
+    else if ( action == "make" || action == "-make" ) std::cout << HELP_MAKE;
+    else if ( action == "add" || action == "-add" ) std::cout << HELP_ADD;
+    else if ( action == "edit" || action == "-edit" ) std::cout << HELP_EDIT;
+    else if ( action == "rename" || action == "-rename" ) std::cout << HELP_RENAME;
+    else if ( action == "addPort" || action == "-addPort" ) std::cout << HELP_ADD_PORT;
+    else if ( action == "remove" || action == "-remove" ) std::cout << HELP_REMOVE;
+    else { ERROR_IF( true, "Invalid action\n" << STYLE_RESET << HELP_MESSAGE ) }
 
     return 0;
 }
@@ -34,7 +36,7 @@ int Help( int const argc, char *argv[] )
 
 int Create( int const argc, char *argv[] )
 {
-    ERROR_IF( argc < 4, "Not enough arguments\n" )
+    ERROR_IF( argc < 4, "Not enough arguments\n" << STYLE_RESET << HELP_CREATE )
 
     std::string const& repositoryName = argv[2];
     std::string const& solutionName = argv[3];
@@ -78,7 +80,8 @@ int Create( int const argc, char *argv[] )
 
 int Make( int const argc, char *argv[] )
 {
-    ERROR_IF( argc < 3, "Not enough arguments\n" )
+    ERROR_IF( argc < 3, "Not enough arguments\n" << STYLE_RESET << HELP_MAKE )
+    ERROR_IF( argc > 4, "Too many arguments\n" << STYLE_RESET << HELP_MAKE )
 
     std::string const& repositoryName = argv[2];
     bool clear = false;
@@ -101,13 +104,13 @@ int Make( int const argc, char *argv[] )
 
         if ( startIndex == 4 )
         {
+            SolutionGenerator::CheckVersion( repositoryName );
             CHECK_FOR_ERROR( MakeSolution( repositoryName, argv[3], clear, open ) )
             return 0;
         }
     }
 
     SolutionGenerator::CheckVersion( repositoryName );
-
     CHECK_FOR_ERROR( MakeSolution( repositoryName, clear, open ) )
 
     return 0;
@@ -117,7 +120,7 @@ int Make( int const argc, char *argv[] )
 
 int Add( int const argc, char* argv[] )
 {
-    ERROR_IF( argc < 4, "Not enough arguments\n" )
+    ERROR_IF( argc < 4, "Not enough arguments\n" << STYLE_RESET << HELP_ADD )
 
     std::string const& repositoryName = argv[2];
     std::string const& projectName = argv[3];
@@ -171,7 +174,7 @@ int Add( int const argc, char* argv[] )
 
 int Edit( int const argc, char* argv[] )
 {
-    ERROR_IF( argc < 5, "Not enough arguments\n" )
+    ERROR_IF( argc < 5, "Not enough arguments\n" << STYLE_RESET << HELP_EDIT )
 
     std::string const& repositoryName = argv[2];
     std::string const& projectName = argv[3];
@@ -218,9 +221,24 @@ int Edit( int const argc, char* argv[] )
 
 
 
+int Rename( int const argc, char* argv[] )
+{
+    ERROR_IF( argc != 5, "Not enough arguments\n" << STYLE_RESET << HELP_RENAME )
+
+    std::string const& repositoryName = argv[2];
+    std::string const& projectName = argv[3];
+    std::string const& newName = argv[4];
+
+    SolutionGenerator::CheckVersion( repositoryName );
+
+    CHECK_FOR_ERROR( RenameProject( repositoryName, projectName, newName ) )
+}
+
+
+
 int AddPortVcpkg( int const argc, char* argv[] )
 {
-    ERROR_IF( argc < 5, "Not enough arguments\n" )
+    ERROR_IF( argc < 5, "Not enough arguments\n" << STYLE_RESET << HELP_ADD_PORT )
 
     std::string const& repositoryName = argv[2];
     std::vector<std::string> ports;
@@ -240,8 +258,8 @@ int AddPortVcpkg( int const argc, char* argv[] )
 
 int Remove( int const argc, char* argv[] )
 {
-    ERROR_IF( argc < 4, "Not enough arguments\n" )
-    ERROR_IF( argc > 4, "To many arguments\n" )
+    ERROR_IF( argc < 4, "Not enough arguments\n" << STYLE_RESET << HELP_REMOVE )
+    ERROR_IF( argc > 4, "To many arguments\n" << STYLE_RESET << HELP_REMOVE )
 
     std::string const& repositoryName = argv[2];
     std::string const& projectName = argv[3];
@@ -262,17 +280,19 @@ int main( int const argc, char *argv[] )
     if ( argc == 1 )
     {
         // SolutionGenerator.exe
-        ERROR_IF( true, "Not enough arguments\n" )
+        ERROR_IF( true, "Not enough arguments\n" << STYLE_RESET << HELP_MESSAGE; )
+        return 0;
     }
     
     std::string const& action = argv[1];
-    if ( action == "-help" ) return Help( argc, argv );
+    if ( action == "-help" || action == "-h" ) return Help( argc, argv );
     if ( action == "-create" ) return Create( argc, argv );
     if ( action == "-make") return Make( argc, argv );
     if ( action == "-add" ) return Add( argc, argv );
     if ( action == "-edit" ) return Edit( argc, argv );
+    if ( action == "-rename" ) return Rename( argc, argv );
     if ( action == "-addPort" ) return AddPortVcpkg( argc, argv );
     if ( action == "-remove" ) return Remove( argc, argv );
 
-    ERROR_IF( true, "Invalid action\n" )
+    ERROR_IF( true, "Invalid action\n" << STYLE_RESET << HELP_MESSAGE )
 }

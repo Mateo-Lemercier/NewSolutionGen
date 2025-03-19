@@ -1,7 +1,8 @@
-﻿#ifndef SOLUTION_GENERATOR_H_INCLUDED
+#ifndef SOLUTION_GENERATOR_H_INCLUDED
 #define SOLUTION_GENERATOR_H_INCLUDED
 
 #include "Json.hpp"
+#include <string>
 
 namespace SolutionGenerator {
 
@@ -31,6 +32,10 @@ int CreateProject( std::string const& repositoryName,
                    bool vcpkg,
                    bool lib,
                    bool window );
+
+int RenameProject( std::string const& repositoryName,
+                   std::string const& projectName,
+                   std::string const& newName );
 
 int RemoveProject( std::string const& repositoryName,
                    std::string const& projectName );

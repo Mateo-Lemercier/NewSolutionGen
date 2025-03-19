@@ -1,8 +1,8 @@
-﻿#pragma once
+#pragma once
 
 
 
-#define VERSION "1.17.3"
+#define VERSION "1.17.5"
 
 
 
@@ -61,6 +61,8 @@
     "|  -add [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                   |\n"\
     "|                                                                                                             |\n"\
     "|  -edit [Repository] [Project] <dependency_projects...> <-startup|-pch|-vcpkg|-lib|-window>                  |\n"\
+    "|                                                                                                             |\n"\
+    "|  -rename [Repository] [Project] [Name]                                                                      |\n"\
     "|                                                                                                             |\n"\
     "|  -addPort [Repository] [Project] [Port] <other_ports...>                                                    |\n"\
     "|                                                                                                             |\n"\
@@ -136,6 +138,17 @@
     "|                                                                                                             |\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
 
+#define HELP_RENAME HELP_START \
+    "Action Description (Rename) :"                                                                                "\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n"\
+    "|  -rename [Repository] [Project] [Name]                                                                      |\n"\
+    "|                                                                                                             |\n"\
+    "|    Repository - The name of the repository folder                                                           |\n"\
+    "|    Project - The name of the project you want to rename                                                     |\n"\
+    "|    Name - The new name that should be given to the project                                                  |\n"\
+    "|                                                                                                             |\n"\
+    "+-------------------------------------------------------------------------------------------------------------+\n" STYLE_RESET
+
 #define HELP_ADD_PORT HELP_START \
     "Action Description (AddPort) :"                                                                               "\n"\
     "+-------------------------------------------------------------------------------------------------------------+\n"\
@@ -180,7 +193,14 @@
     /*"        "                                             "\n"*/\
     /*"    ],"                                               "\n"*/\
     "    \"dependencies\": [],"                            "\n"\
-    "    \"dependents\": []"                               "\n"\
+    "    \"dependents\": [],"                              "\n"\
+    "    \"preprocessorDefinitions\": [],"                 "\n"\
+    "    \"additionalIncludeDirectories\": [],"            "\n"\
+    "    \"additionalLibraryDirectories\": [],"            "\n"\
+    "    \"additionalDependencies\": [],"                  "\n"\
+    "    \"additionalOptions\": [],"                       "\n"\
+    "    \"CopyLocalProjectReference\": false,"            "\n"\
+    "    \"CopyLocalDebugSymbols\": false"                 "\n"\
     "}"
 
 
@@ -256,19 +276,19 @@
 
 
 #define VCPKG_CONFIGURATION \
-    "{"                                                                                                    "\n"\
-    "    \"default-registry\": {"                                                                          "\n"\
-    "        \"baseline\": \"5a3e638f449206ac10f82f2171a21333004d7306\","                                  "\n"\
-    "        \"kind\": \"git\","                                                                           "\n"\
-    "        \"repository\": \"https://github.com/microsoft/vcpkg\""                                       "\n"\
-    "    },"                                                                                               "\n"\
-    "    \"registries\": ["                                                                                "\n"\
-    "        {"                                                                                            "\n"\
-    "            \"kind\": \"artifact\","                                                                      "\n"\
-    "            \"location\": \"https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip\"," "\n"\
-    "            \"name\": \"microsoft\""                                                                      "\n"\
-    "        }"                                                                                            "\n"\
-    "    ]"                                                                                                "\n"\
+    "{"                                                                                                                  "\n"\
+    "    \"default-registry\": {"                                                                                        "\n"\
+    "        \"baseline\": \"5a3e638f449206ac10f82f2171a21333004d7306\","                                                "\n"\
+    "        \"kind\": \"git\","                                                                                         "\n"\
+    "        \"repository\": \"https://github.com/microsoft/vcpkg\""                                                     "\n"\
+    "    },"                                                                                                             "\n"\
+    "    \"registries\": ["                                                                                              "\n"\
+    "        {"                                                                                                          "\n"\
+    "            \"kind\": \"artifact\","                                                                                "\n"\
+    "            \"location\": \"https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip\","           "\n"\
+    "            \"name\": \"microsoft\""                                                                                "\n"\
+    "        }"                                                                                                          "\n"\
+    "    ]"                                                                                                              "\n"\
     "}"
 
 #define VCPKG_JSON \
@@ -314,242 +334,257 @@
 
 
 
-#define VCXPROJ( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies, clIncludes, clCompiles, images, nones, projectReferences ) (\
-    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                      "\n"\
-    "<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                "\n"\
-    "    <ItemGroup Label=\"ProjectConfigurations\">"                                                                                                                                                 "\n"\
-    "        <ProjectConfiguration Include=\"Debug|Win32\">"                                                                                                                                          "\n"\
-    "            <Configuration>Debug</Configuration>"                                                                                                                                                "\n"\
-    "            <Platform>Win32</Platform>"                                                                                                                                                          "\n"\
-    "        </ProjectConfiguration>"                                                                                                                                                                 "\n"\
-    "        <ProjectConfiguration Include=\"Release|Win32\">"                                                                                                                                        "\n"\
-    "            <Configuration>Release</Configuration>"                                                                                                                                              "\n"\
-    "            <Platform>Win32</Platform>"                                                                                                                                                          "\n"\
-    "        </ProjectConfiguration>"                                                                                                                                                                 "\n"\
-    "        <ProjectConfiguration Include=\"Debug|x64\">"                                                                                                                                            "\n"\
-    "            <Configuration>Debug</Configuration>"                                                                                                                                                "\n"\
-    "            <Platform>x64</Platform>"                                                                                                                                                            "\n"\
-    "        </ProjectConfiguration>"                                                                                                                                                                 "\n"\
-    "        <ProjectConfiguration Include=\"Release|x64\">"                                                                                                                                          "\n"\
-    "            <Configuration>Release</Configuration>"                                                                                                                                              "\n"\
-    "            <Platform>x64</Platform>"                                                                                                                                                            "\n"\
-    "        </ProjectConfiguration>"                                                                                                                                                                 "\n"\
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <PropertyGroup Label=\"Globals\">"                                                                                                                                                           "\n"\
-    /*"        <VCProjectVersion>17.0</VCProjectVersion>"                                                                                                                                               "\n"*/\
-    "        <Keyword>Win32Proj</Keyword>"                                                                                                                                                            "\n"\
-    "        <ProjectGuid>{" + (guid) + "}</ProjectGuid>"                                                                                                                                               "\n"\
-    "        <RootNamespace>MonProjet1</RootNamespace>"                                                                                                                                               "\n"\
-    /*"        <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>"                                                                                                                       "\n"*/\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />"                                                                                                                        "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\" Label=\"Configuration\">"                                                                                         "\n"\
-    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                      "\n"\
-    "        <UseDebugLibraries>true</UseDebugLibraries>"                                                                                                                                             "\n"\
-    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                 "\n"\
-    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                    "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\" Label=\"Configuration\">"                                                                                       "\n"\
-    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                      "\n"\
-    "        <UseDebugLibraries>false</UseDebugLibraries>"                                                                                                                                            "\n"\
-    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                 "\n"\
-    "        <WholeProgramOptimization>true</WholeProgramOptimization>"                                                                                                                               "\n"\
-    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                    "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\" Label=\"Configuration\">"                                                                                           "\n"\
-    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                      "\n"\
-    "        <UseDebugLibraries>true</UseDebugLibraries>"                                                                                                                                             "\n"\
-    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                 "\n"\
-    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                    "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\" Label=\"Configuration\">"                                                                                         "\n"\
-    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                      "\n"\
-    "        <UseDebugLibraries>false</UseDebugLibraries>"                                                                                                                                            "\n"\
-    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                 "\n"\
-    "        <WholeProgramOptimization>true</WholeProgramOptimization>"                                                                                                                               "\n"\
-    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                    "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.props\" />"                                                                                                                                "\n"\
-    "    <ImportGroup Label=\"ExtensionSettings\">"                                                                                                                                                   "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
-    "    <ImportGroup Label=\"Shared\">"                                                                                                                                                              "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
-    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                          "\n"\
-    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />" "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
-    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                        "\n"\
-    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />" "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
-    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                            "\n"\
-    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />" "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
-    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                          "\n"\
-    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />" "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
-    "    <PropertyGroup Label=\"UserMacros\" />"                                                                                                                                                      "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                                                 "\n"\
-    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                           "\n"\
-    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                             "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                                               "\n"\
-    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                           "\n"\
-    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                             "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                                                   "\n"\
-    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                           "\n"\
-    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                             "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                                                 "\n"\
-    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                           "\n"\
-    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                             "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <PropertyGroup Label=\"Vcpkg\">"                                                                                                                                                             "\n"\
-    "        <VcpkgEnabled>" + (vcpkgEnabled) + "</VcpkgEnabled>"                                                                                                                                     "\n"\
-    "        <VcpkgEnableManifest>" + (vcpkgEnabled) + "</VcpkgEnableManifest>"                                                                                                                       "\n"\
-    "        <VcpkgManifestRoot>$(SolutionDir)..\\config\\" + (projectName) + "</VcpkgManifestRoot>"                                                                                                  "\n"\
-    "        <VcpkgInstalledDir>$(SolutionDir)\\vcpkg_installed\\$(VcpkgTriplet)</VcpkgInstalledDir>"                                                                                                 "\n"\
-    "    </PropertyGroup>"                                                                                                                                                                            "\n"\
-    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                                           "\n"\
-    "        <ClCompile>"                                                                                                                                                                             "\n"\
-    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                 "\n"\
-    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                           "\n"\
-    "            <PreprocessorDefinitions>WIN32;_DEBUG;_" + (preprocessorDefinitions) + ";%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                       "\n"\
-    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                             "\n"\
-    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                       "\n"\
-    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                  "\n"\
-    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                "\n"\
-    "            <AdditionalIncludeDirectories>" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>"                                                  "\n"\
-    "        </ClCompile>"                                                                                                                                                                            "\n"\
-    "        <Link>"                                                                                                                                                                                  "\n"\
-    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                          "\n"\
-    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                           "\n"\
-    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                  "\n"\
-    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                          "\n"\
-    "        </Link>"                                                                                                                                                                                 "\n"\
-    "    </ItemDefinitionGroup>"                                                                                                                                                                      "\n"\
-    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                                         "\n"\
-    "        <ClCompile>"                                                                                                                                                                             "\n"\
-    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                 "\n"\
-    "            <FunctionLevelLinking>true</FunctionLevelLinking>"                                                                                                                                   "\n"\
-    "            <IntrinsicFunctions>true</IntrinsicFunctions>"                                                                                                                                       "\n"\
-    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                           "\n"\
-    "            <PreprocessorDefinitions>WIN32;NDEBUG;_" + (preprocessorDefinitions) + ";%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                       "\n"\
-    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                             "\n"\
-    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                       "\n"\
-    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                  "\n"\
-    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                "\n"\
-    "            <AdditionalIncludeDirectories>" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>"                                                  "\n"\
-    "        </ClCompile>"                                                                                                                                                                            "\n"\
-    "        <Link>"                                                                                                                                                                                  "\n"\
-    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                          "\n"\
-    "            <EnableCOMDATFolding>true</EnableCOMDATFolding>"                                                                                                                                     "\n"\
-    "            <OptimizeReferences>true</OptimizeReferences>"                                                                                                                                       "\n"\
-    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                           "\n"\
-    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                  "\n"\
-    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                          "\n"\
-    "        </Link>"                                                                                                                                                                                 "\n"\
-    "    </ItemDefinitionGroup>"                                                                                                                                                                      "\n"\
-    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                                             "\n"\
-    "        <ClCompile>"                                                                                                                                                                             "\n"\
-    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                 "\n"\
-    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                           "\n"\
-    "            <PreprocessorDefinitions>_DEBUG;_" + (preprocessorDefinitions) + ";%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                             "\n"\
-    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                             "\n"\
-    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                       "\n"\
-    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                  "\n"\
-    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                "\n"\
-    "            <AdditionalIncludeDirectories>" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>"                                                  "\n"\
-    "        </ClCompile>"                                                                                                                                                                            "\n"\
-    "        <Link>"                                                                                                                                                                                  "\n"\
-    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                          "\n"\
-    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                           "\n"\
-    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                  "\n"\
-    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                          "\n"\
-    "        </Link>"                                                                                                                                                                                 "\n"\
-    "    </ItemDefinitionGroup>"                                                                                                                                                                      "\n"\
-    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                                           "\n"\
-    "        <ClCompile>"                                                                                                                                                                             "\n"\
-    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                 "\n"\
-    "            <FunctionLevelLinking>true</FunctionLevelLinking>"                                                                                                                                   "\n"\
-    "            <IntrinsicFunctions>true</IntrinsicFunctions>"                                                                                                                                       "\n"\
-    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                           "\n"\
-    "            <PreprocessorDefinitions>NDEBUG;_" + (preprocessorDefinitions) + ";%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                             "\n"\
-    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                             "\n"\
-    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                       "\n"\
-    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                  "\n"\
-    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                "\n"\
-    "            <AdditionalIncludeDirectories>" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>"                                                  "\n"\
-    "        </ClCompile>"                                                                                                                                                                            "\n"\
-    "        <Link>"                                                                                                                                                                                  "\n"\
-    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                          "\n"\
-    "            <EnableCOMDATFolding>true</EnableCOMDATFolding>"                                                                                                                                     "\n"\
-    "            <OptimizeReferences>true</OptimizeReferences>"                                                                                                                                       "\n"\
-    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                           "\n"\
-    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                  "\n"\
-    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                          "\n"\
-    "        </Link>"                                                                                                                                                                                 "\n"\
-    "    </ItemDefinitionGroup>"                                                                                                                                                                      "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (clIncludes) +                                                                                                                                                                                      \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (clCompiles) +                                                                                                                                                                                      \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (images) +                                                                                                                                                                                          \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (nones) +                                                                                                                                                                                           \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (projectReferences) +                                                                                                                                                                               \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />"                                                                                                                              "\n"\
-    "    <ImportGroup Label=\"ExtensionTargets\">"                                                                                                                                                    "\n"\
-    "    </ImportGroup>"                                                                                                                                                                              "\n"\
+    #define VCXPROJ( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, \
+        additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies, clIncludes, \
+        clCompiles, images, nones, projectReferences, copyLocalProjectReference, copyLocalDebugSymbols, additionalOptions ) \
+    (\
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                                    "\n"\
+        "<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                              "\n"\
+    "    <ItemGroup Label=\"ProjectConfigurations\">"                                                                                                                                                                   "\n"\
+    "        <ProjectConfiguration Include=\"Debug|Win32\">"                                                                                                                                                            "\n"\
+    "            <Configuration>Debug</Configuration>"                                                                                                                                                                  "\n"\
+    "            <Platform>Win32</Platform>"                                                                                                                                                                            "\n"\
+    "        </ProjectConfiguration>"                                                                                                                                                                                   "\n"\
+    "        <ProjectConfiguration Include=\"Release|Win32\">"                                                                                                                                                          "\n"\
+    "            <Configuration>Release</Configuration>"                                                                                                                                                                "\n"\
+    "            <Platform>Win32</Platform>"                                                                                                                                                                            "\n"\
+    "        </ProjectConfiguration>"                                                                                                                                                                                   "\n"\
+    "        <ProjectConfiguration Include=\"Debug|x64\">"                                                                                                                                                              "\n"\
+    "            <Configuration>Debug</Configuration>"                                                                                                                                                                  "\n"\
+    "            <Platform>x64</Platform>"                                                                                                                                                                              "\n"\
+    "        </ProjectConfiguration>"                                                                                                                                                                                   "\n"\
+    "        <ProjectConfiguration Include=\"Release|x64\">"                                                                                                                                                            "\n"\
+    "            <Configuration>Release</Configuration>"                                                                                                                                                                "\n"\
+    "            <Platform>x64</Platform>"                                                                                                                                                                              "\n"\
+    "        </ProjectConfiguration>"                                                                                                                                                                                   "\n"\
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <PropertyGroup Label=\"Globals\">"                                                                                                                                                                             "\n"\
+    /*"        <VCProjectVersion>17.0</VCProjectVersion>"                                                                                                                                                               "\n"*/\
+    "        <Keyword>Win32Proj</Keyword>"                                                                                                                                                                              "\n"\
+    "        <ProjectGuid>{" + (guid) + "}</ProjectGuid>"                                                                                                                                                               "\n"\
+    "        <RootNamespace>MonProjet1</RootNamespace>"                                                                                                                                                                 "\n"\
+    /*"        <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>"                                                                                                                                       "\n"*/\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />"                                                                                                                                          "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\" Label=\"Configuration\">"                                                                                                           "\n"\
+    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                                        "\n"\
+    "        <UseDebugLibraries>true</UseDebugLibraries>"                                                                                                                                                               "\n"\
+    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                                   "\n"\
+    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                                      "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\" Label=\"Configuration\">"                                                                                                         "\n"\
+    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                                        "\n"\
+    "        <UseDebugLibraries>false</UseDebugLibraries>"                                                                                                                                                              "\n"\
+    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                                   "\n"\
+    "        <WholeProgramOptimization>true</WholeProgramOptimization>"                                                                                                                                                 "\n"\
+    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                                      "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\" Label=\"Configuration\">"                                                                                                             "\n"\
+    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                                        "\n"\
+    "        <UseDebugLibraries>true</UseDebugLibraries>"                                                                                                                                                               "\n"\
+    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                                   "\n"\
+    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                                      "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\" Label=\"Configuration\">"                                                                                                           "\n"\
+    "        <ConfigurationType>" + (configurationType) + "</ConfigurationType>"                                                                                                                                        "\n"\
+    "        <UseDebugLibraries>false</UseDebugLibraries>"                                                                                                                                                              "\n"\
+    "        <PlatformToolset>v143</PlatformToolset>"                                                                                                                                                                   "\n"\
+    "        <WholeProgramOptimization>true</WholeProgramOptimization>"                                                                                                                                                 "\n"\
+    "        <CharacterSet>Unicode</CharacterSet>"                                                                                                                                                                      "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.props\" />"                                                                                                                                                  "\n"\
+    "    <ImportGroup Label=\"ExtensionSettings\">"                                                                                                                                                                     "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
+    "    <ImportGroup Label=\"Shared\">"                                                                                                                                                                                "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
+    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                                            "\n"\
+    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />"                   "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
+    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                                          "\n"\
+    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />"                   "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
+    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                                              "\n"\
+    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />"                   "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
+    "    <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                                            "\n"\
+    "        <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />"                   "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
+    "    <PropertyGroup Label=\"UserMacros\" />"                                                                                                                                                                        "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                                                                   "\n"\
+    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                                             "\n"\
+    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                                               "\n"\
+    "        <CopyLocalProjectReference>" + (copyLocalProjectReference) + "</CopyLocalProjectReference>"                                                                                                                "\n"\
+    "        <CopyLocalDebugSymbols>" + (copyLocalDebugSymbols) + "</CopyLocalDebugSymbols>"                                                                                                                            "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                                                                 "\n"\
+    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                                             "\n"\
+    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                                               "\n"\
+    "        <CopyLocalProjectReference>" + (copyLocalProjectReference) + "</CopyLocalProjectReference>"                                                                                                                "\n"\
+    "        <CopyLocalDebugSymbols>" + (copyLocalDebugSymbols) + "</CopyLocalDebugSymbols>"                                                                                                                            "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                                                                     "\n"\
+    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                                             "\n"\
+    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                                               "\n"\
+    "        <CopyLocalProjectReference>" + (copyLocalProjectReference) + "</CopyLocalProjectReference>"                                                                                                                "\n"\
+    "        <CopyLocalDebugSymbols>" + (copyLocalDebugSymbols) + "</CopyLocalDebugSymbols>"                                                                                                                            "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                                                                   "\n"\
+    "        <OutDir>$(ProjectDir)$(Platform)\\$(Configuration)\\</OutDir>"                                                                                                                                             "\n"\
+    "        <IntDir>$(ProjectDir)$(Platform)\\$(Configuration)\\intermediate\\</IntDir>"                                                                                                                               "\n"\
+    "        <CopyLocalProjectReference>" + (copyLocalProjectReference) + "</CopyLocalProjectReference>"                                                                                                                "\n"\
+    "        <CopyLocalDebugSymbols>" + (copyLocalDebugSymbols) + "</CopyLocalDebugSymbols>"                                                                                                                            "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <PropertyGroup Label=\"Vcpkg\">"                                                                                                                                                                               "\n"\
+    "        <VcpkgEnabled>" + (vcpkgEnabled) + "</VcpkgEnabled>"                                                                                                                                                       "\n"\
+    "        <VcpkgEnableManifest>" + (vcpkgEnabled) + "</VcpkgEnableManifest>"                                                                                                                                         "\n"\
+    "        <VcpkgManifestRoot>$(SolutionDir)..\\config\\" + (projectName) + "</VcpkgManifestRoot>"                                                                                                                    "\n"\
+    "        <VcpkgInstalledDir>$(SolutionDir)\\vcpkg_installed\\$(VcpkgTriplet)</VcpkgInstalledDir>"                                                                                                                   "\n"\
+    "    </PropertyGroup>"                                                                                                                                                                                              "\n"\
+    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|Win32'\">"                                                                                                                             "\n"\
+    "        <ClCompile>"                                                                                                                                                                                               "\n"\
+    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                                   "\n"\
+    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                                             "\n"\
+    "            <PreprocessorDefinitions>WIN32;_DEBUG;" + (preprocessorDefinitions) + "%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                                           "\n"\
+    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                                               "\n"\
+    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                                         "\n"\
+    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                                    "\n"\
+    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                                  "\n"\
+    "            <AdditionalIncludeDirectories>$(SolutionDir)..\\src;$(SolutionDir)..\\src\\" + (projectName) + ";" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>" "\n"\
+    "        </ClCompile>"                                                                                                                                                                                              "\n"\
+    "        <Link>"                                                                                                                                                                                                    "\n"\
+    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                                            "\n"\
+    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                                            "\n"\
+    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
+    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
+    "            <AdditionalOptions>" + (additionalOptions) + "</AdditionalOptions>"                                                                                                                                    "\n"\
+    "        </Link>"                                                                                                                                                                                                   "\n"\
+    "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
+    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                                                           "\n"\
+    "        <ClCompile>"                                                                                                                                                                                               "\n"\
+    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                                   "\n"\
+    "            <FunctionLevelLinking>true</FunctionLevelLinking>"                                                                                                                                                     "\n"\
+    "            <IntrinsicFunctions>true</IntrinsicFunctions>"                                                                                                                                                         "\n"\
+    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                                             "\n"\
+    "            <PreprocessorDefinitions>WIN32;NDEBUG;" + (preprocessorDefinitions) + "%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                                           "\n"\
+    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                                               "\n"\
+    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                                         "\n"\
+    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                                    "\n"\
+    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                                  "\n"\
+    "            <AdditionalIncludeDirectories>$(SolutionDir)..\\src;$(SolutionDir)..\\src\\" + (projectName) + ";" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>" "\n"\
+    "        </ClCompile>"                                                                                                                                                                                              "\n"\
+    "        <Link>"                                                                                                                                                                                                    "\n"\
+    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                                            "\n"\
+    "            <EnableCOMDATFolding>true</EnableCOMDATFolding>"                                                                                                                                                       "\n"\
+    "            <OptimizeReferences>true</OptimizeReferences>"                                                                                                                                                         "\n"\
+    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                                             "\n"\
+    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
+    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
+    "            <AdditionalOptions>" + (additionalOptions) + "</AdditionalOptions>"                                                                                                                                    "\n"\
+    "        </Link>"                                                                                                                                                                                                   "\n"\
+    "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
+    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                                                               "\n"\
+    "        <ClCompile>"                                                                                                                                                                                               "\n"\
+    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                                   "\n"\
+    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                                             "\n"\
+    "            <PreprocessorDefinitions>_DEBUG;" + (preprocessorDefinitions) + "%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                                                 "\n"\
+    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                                               "\n"\
+    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                                         "\n"\
+    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                                    "\n"\
+    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                                  "\n"\
+    "            <AdditionalIncludeDirectories>$(SolutionDir)..\\src;$(SolutionDir)..\\src\\" + (projectName) + ";" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>" "\n"\
+    "        </ClCompile>"                                                                                                                                                                                              "\n"\
+    "        <Link>"                                                                                                                                                                                                    "\n"\
+    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                                            "\n"\
+    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                                             "\n"\
+    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
+    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
+    "            <AdditionalOptions>" + (additionalOptions) + "</AdditionalOptions>"                                                                                                                                    "\n"\
+    "        </Link>"                                                                                                                                                                                                   "\n"\
+    "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
+    "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                                                             "\n"\
+    "        <ClCompile>"                                                                                                                                                                                               "\n"\
+    "            <WarningLevel>Level3</WarningLevel>"                                                                                                                                                                   "\n"\
+    "            <FunctionLevelLinking>true</FunctionLevelLinking>"                                                                                                                                                     "\n"\
+    "            <IntrinsicFunctions>true</IntrinsicFunctions>"                                                                                                                                                         "\n"\
+    "            <SDLCheck>true</SDLCheck>"                                                                                                                                                                             "\n"\
+    "            <PreprocessorDefinitions>NDEBUG;" + (preprocessorDefinitions) + "%(PreprocessorDefinitions)</PreprocessorDefinitions>"                                                                                 "\n"\
+    "            <ConformanceMode>true</ConformanceMode>"                                                                                                                                                               "\n"\
+    "            <LanguageStandard>stdcpp20</LanguageStandard>"                                                                                                                                                         "\n"\
+    "            <PrecompiledHeader>" + (precompiledHeader) + "</PrecompiledHeader>"                                                                                                                                    "\n"\
+    "            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>"                                                                                                                                                  "\n"\
+    "            <AdditionalIncludeDirectories>$(SolutionDir)..\\src;$(SolutionDir)..\\src\\" + (projectName) + ";" + (additionalIncludeDirectories) + "%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>" "\n"\
+    "        </ClCompile>"                                                                                                                                                                                              "\n"\
+    "        <Link>"                                                                                                                                                                                                    "\n"\
+    "            <SubSystem>" + (subSystem) + "</SubSystem>"                                                                                                                                                            "\n"\
+    "            <EnableCOMDATFolding>true</EnableCOMDATFolding>"                                                                                                                                                       "\n"\
+    "            <OptimizeReferences>true</OptimizeReferences>"                                                                                                                                                         "\n"\
+    "            <GenerateDebugInformation>true</GenerateDebugInformation>"                                                                                                                                             "\n"\
+    "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
+    "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
+    "            <AdditionalOptions>" + (additionalOptions) + "</AdditionalOptions>"                                                                                                                                    "\n"\
+    "        </Link>"                                                                                                                                                                                                   "\n"\
+    "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (clIncludes) +                                                                                                                                                                                                        \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (clCompiles) +                                                                                                                                                                                                        \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (images) +                                                                                                                                                                                                            \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (nones) +                                                                                                                                                                                                             \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (projectReferences) +                                                                                                                                                                                                 \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />"                                                                                                                                                "\n"\
+    "    <ImportGroup Label=\"ExtensionTargets\">"                                                                                                                                                                      "\n"\
+    "    </ImportGroup>"                                                                                                                                                                                                "\n"\
     "</Project>")
 
 #define CLCOMPILE_PCH_CPP( subFolder, fileName ) (\
-    "        <ClCompile Include=\"$(SolutionDir)..\\src\\" + (subFolder) + "\\" + (fileName) + "\">"                                                                                                  "\n"\
-    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|Win32&apos;\">Create</PrecompiledHeader>"                                                       "\n"\
-    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|Win32&apos;\">Create</PrecompiledHeader>"                                                     "\n"\
-    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;\">Create</PrecompiledHeader>"                                                         "\n"\
-    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;\">Create</PrecompiledHeader>"                                                       "\n"\
-    "        </ClCompile>"                                                                                                                                                                            "\n")
+    "        <ClCompile Include=\"$(SolutionDir)..\\src\\" + (subFolder) + "\\" + (fileName) + "\">"                                                                                                                    "\n"\
+    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|Win32&apos;\">Create</PrecompiledHeader>"                                                                         "\n"\
+    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|Win32&apos;\">Create</PrecompiledHeader>"                                                                       "\n"\
+    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;\">Create</PrecompiledHeader>"                                                                           "\n"\
+    "            <PrecompiledHeader Condition=\"&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;\">Create</PrecompiledHeader>"                                                                         "\n"\
+    "        </ClCompile>"                                                                                                                                                                                              "\n")
 
 #define VCXPROJ_FILTERS( clIncludes, clCompiles, images, nones ) (\
-    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                      "\n"\
-    "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                    "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    "        <Filter Include=\"Source Files\">"                                                                                                                                                       "\n"\
-    "            <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>"                                                                                                         "\n"\
-    "            <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>"                                                                                                     "\n"\
-    "        </Filter>"                                                                                                                                                                               "\n"\
-    "        <Filter Include=\"Header Files\">"                                                                                                                                                       "\n"\
-    "            <UniqueIdentifier>{93995380-89BD-4B04-88EB-625FBE52EBFB}</UniqueIdentifier>"                                                                                                         "\n"\
-    "            <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>"                                                                                                                        "\n"\
-    "        </Filter>"                                                                                                                                                                               "\n"\
-    "        <Filter Include=\"Images\">"                                                                                                                                                             "\n"\
-    "            <UniqueIdentifier>{6E901252-3135-5382-5769-143D295A57A6}</UniqueIdentifier>"                                                                                                         "\n"\
-    "            <Extensions>png;jpg;jpeg;dds;bmp;tif;tiff;gif;ico;svg</Extensions>"                                                                                                                  "\n"\
-    "        </Filter>"                                                                                                                                                                               "\n"\
-    "        <Filter Include=\"Resource Files\">"                                                                                                                                                     "\n"\
-    "            <UniqueIdentifier>{67DA6AB6-F800-4C08-8B7A-83BB121AAD01}</UniqueIdentifier>"                                                                                                         "\n"\
-    "            <Extensions>rc;cur;dlg;rc2;rct;bin;rgs;resx;wav;mfcribbon-ms</Extensions>"                                                                                                           "\n"\
-    "        </Filter>"                                                                                                                                                                               "\n"\
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (clIncludes) +                                                                                                                                                                                      \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (clCompiles) +                                                                                                                                                                                      \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (images) +                                                                                                                                                                                          \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
-    "    <ItemGroup>"                                                                                                                                                                                 "\n"\
-    + (nones) +                                                                                                                                                                                           \
-    "    </ItemGroup>"                                                                                                                                                                                "\n"\
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                                        "\n"\
+    "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                                      "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    "        <Filter Include=\"Source Files\">"                                                                                                                                                                         "\n"\
+    "            <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>"                                                                                                                           "\n"\
+    "            <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>"                                                                                                                       "\n"\
+    "        </Filter>"                                                                                                                                                                                                 "\n"\
+    "        <Filter Include=\"Header Files\">"                                                                                                                                                                         "\n"\
+    "            <UniqueIdentifier>{93995380-89BD-4B04-88EB-625FBE52EBFB}</UniqueIdentifier>"                                                                                                                           "\n"\
+    "            <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>"                                                                                                                                          "\n"\
+    "        </Filter>"                                                                                                                                                                                                 "\n"\
+    "        <Filter Include=\"Images\">"                                                                                                                                                                               "\n"\
+    "            <UniqueIdentifier>{6E901252-3135-5382-5769-143D295A57A6}</UniqueIdentifier>"                                                                                                                           "\n"\
+    "            <Extensions>png;jpg;jpeg;dds;bmp;tif;tiff;gif;ico;svg</Extensions>"                                                                                                                                    "\n"\
+    "        </Filter>"                                                                                                                                                                                                 "\n"\
+    "        <Filter Include=\"Resource Files\">"                                                                                                                                                                       "\n"\
+    "            <UniqueIdentifier>{67DA6AB6-F800-4C08-8B7A-83BB121AAD01}</UniqueIdentifier>"                                                                                                                           "\n"\
+    "            <Extensions>rc;cur;dlg;rc2;rct;bin;rgs;resx;wav;mfcribbon-ms</Extensions>"                                                                                                                             "\n"\
+    "        </Filter>"                                                                                                                                                                                                 "\n"\
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (clIncludes) +                                                                                                                                                                                                        \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (clCompiles) +                                                                                                                                                                                                        \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (images) +                                                                                                                                                                                                            \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (nones) +                                                                                                                                                                                                             \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
     "</Project>")
 
 

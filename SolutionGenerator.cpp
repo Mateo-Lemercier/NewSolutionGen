@@ -1,9 +1,9 @@
-﻿#include <string>
+#include <string>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <windows.h>
-#include "NumberToHex.h"
+#include "Utils.h"
 #include "Settings.h"
 #include "SolutionGenerator.h"
 namespace fs = std::filesystem;
@@ -14,18 +14,18 @@ namespace SolutionGenerator {
 std::string GenerateGuid()
 {
     std::string result;
-    NumberToHex( rand(), result );
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     result += '-';
-    NumberToHex( rand(), result );
-    NumberToHex( rand(), result );
-    NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
+    Utils::NumberToHex( rand(), result );
     return result;
 }
 
@@ -40,6 +40,7 @@ void CheckVersion( std::string const& repositoryName )
     settingsFileRead.close();
 
     nlohmann::json& version = settingsJson["version"];
+
     bool versionChanged = false;
     
     if ( version == VERSION ) return;
@@ -126,28 +127,77 @@ void CheckVersion( std::string const& repositoryName )
         // // TODO Add "filters" property to every single project settings
     }
 
-    //if ( versionChanged || version == "1.17.2" )
-    //{
-    //    versionChanged = true;
+    if ( versionChanged || version == "1.17.2" )
+    {
+        versionChanged = true;
 
-    //    for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
-    //    {
-    //        std::vector<std::string> dependents = settingsJson["projects"][project.first]["dependents"];
+        for ( auto const& project : static_cast<std::map<std::string, nlohmann::json>>( settingsJson["projects"] ) )
+        {
+            for ( std::vector<std::string> dependencies = project.second["dependencies"],
+                                             dependents = project.second["dependents"];
+                  std::string const& dependency : dependencies )
+            {
+                if ( std::find( dependents.begin(), dependents.end(), dependency ) == dependents.end() )
+                {
+                    while ( true )
+                    {
+                        std::string answer;
 
-    //        for ( std::string const& dependency : static_cast<std::vector<std::string>>( project.second["dependencies"] ) )
-    //        {
-    //            if ( std::find( dependents.begin(), dependents.end(), dependency ) == dependents.end() )
-    //            {
-    //                // RemoveDependency( settingsJson,  );// TOD FINISH
-    //                continue;
-    //            }
+                        std::cout << FG_INPUT "There is a looping dependency between project " << project.first << " and project " << dependency << "\n"
+                                              "From which project do you want to remove the dependency ? (" << project.first << " = 1, " << dependency << " = 2)\n" STYLE_RESET;
+                        std::cin >> answer;
 
-    //            if ( dependency == project.first )
-    //                RemoveDependency( settingsJson, project.first, dependency );
-    //        }
-    //    }
-    //}
+                        if ( answer == "1" || answer == project.first )
+                        {
+                            RemoveDependency( settingsJson, project.first, dependency );
+                            break;
+                        }
 
+                        if ( answer != "2" && answer != dependency ) continue;
+
+                        RemoveDependency( settingsJson, dependency, project.first );
+                        break;
+                    }
+
+                    continue;
+                }
+
+                if ( dependency == project.first )
+                    RemoveDependency( settingsJson, project.first, dependency );
+            }
+        }
+    }
+
+    if ( versionChanged || version == "1.17.3" )
+    {
+        fs::remove_all( repositoryName + "/bin" );
+        fs::create_directory( repositoryName + "/bin" );
+        
+        CreateBats( repositoryName );
+        
+        std::map<std::string, nlohmann::json> const& projects = settingsJson["projects"];
+        for ( auto const& project : projects )
+        {
+            settingsJson["projects"][project.first]["preprocessorDefinitions"] = std::vector<std::string>();
+            settingsJson["projects"][project.first]["additionalIncludeDirectories"] = std::vector<std::string>();
+            settingsJson["projects"][project.first]["additionalLibraryDirectories"] = std::vector<std::string>();
+            settingsJson["projects"][project.first]["additionalDependencies"] = std::vector<std::string>();
+
+            if ( project.second["lib"] ) continue;
+
+            CreateBats( repositoryName, project.first );
+        }
+    }
+
+    if ( versionChanged || version == "1.17.4" ) {
+        std::map<std::string, nlohmann::json> const& projects = settingsJson["projects"];
+        for (const auto& project : projects | std::views::keys) {
+            settingsJson["projects"][project]["additionalOptions"] = std::vector<std::string>();
+            settingsJson["projects"][project]["CopyLocalProjectReference"] = false;
+            settingsJson["projects"][project]["CopyLocalDebugSymbols"] =  false;
+        }
+    }
+    
     version = VERSION;
 
     std::ofstream settingsFileWrite( configPath );
@@ -156,6 +206,7 @@ void CheckVersion( std::string const& repositoryName )
 
     std::cout << FG_SUCCESS "settings.json updated to version " VERSION "\n" STYLE_RESET;
 }
+    
 
 
 
@@ -211,7 +262,7 @@ int CreateBats( std::string const& repositoryName )
     std::ofstream makeFileWrite( repositoryName + "/bin/make.bat" );
     makeFileWrite <<
         "cd ../.."                            "\n"
-        "SolutionGen.exe -make " + repositoryName;
+        "SolutionGenerator.exe -make " + repositoryName;
     makeFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make.bat created successfully\n" STYLE_RESET;
@@ -219,7 +270,7 @@ int CreateBats( std::string const& repositoryName )
     std::ofstream makeClearFileWrite( repositoryName + "/bin/make-clear.bat" );
     makeClearFileWrite <<
         "cd ../.."                                       "\n"
-        "SolutionGen.exe -make " + repositoryName + " -clear";
+        "SolutionGenerator.exe -make " + repositoryName + " -clear";
     makeClearFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make-clear.bat created successfully\n" STYLE_RESET;
@@ -249,6 +300,73 @@ int CreateProject( std::string const& repositoryName,
     if ( lib == false ) CHECK_FOR_ERROR( CreateBats( repositoryName, projectName ) )
 
     std::cout << FG_SUCCESS "Project (" + projectName + ") created successfully\n" STYLE_RESET;
+
+    return 0;
+}
+
+
+
+int RenameProject( std::string const& repositoryName,
+                   std::string const& projectName,
+                   std::string const& newName )
+{
+    std::string const configPath = repositoryName + "/config";
+    std::string const settingsPath = configPath + "/settings.json";
+
+    std::ifstream settingsFileRead( settingsPath );
+    nlohmann::json settingsJson = nlohmann::json::parse( settingsFileRead );
+    settingsFileRead.close();
+
+    ERROR_IF( settingsJson["projects"].contains( projectName ) == false, "Project (" + projectName + ") doesn't exist in this repository (" + repositoryName + ")\n" )
+    ERROR_IF( settingsJson["projects"].contains( newName ), "Project (" + newName + ") already exists in this repository (" + repositoryName + ")\n" )
+    ERROR_IF( projectName == newName, "The name " + projectName + " is the same as " + newName + "...\n" )
+
+    settingsJson["projects"][newName] = settingsJson["projects"][projectName];
+    settingsJson["projects"].erase( projectName );
+
+    for ( nlohmann::json const& dependent : settingsJson["projects"][newName]["dependents"] )
+    {
+        std::vector<std::string> dependencies = settingsJson["projects"][dependent]["dependencies"];
+        std::replace( dependencies.begin(), dependencies.end(), projectName, newName );
+    }
+
+    for ( nlohmann::json const& dependent : settingsJson["projects"][newName]["dependencies"] )
+    {
+        std::vector<std::string> dependents = settingsJson["projects"][dependent]["dependents"];
+        std::replace( dependents.begin(), dependents.end(), projectName, newName );
+    }
+
+    std::error_code error;
+    fs::rename( repositoryName + "/src/" + projectName, repositoryName + "/src/" + newName, error );
+    ERROR_IF( error, "Project (" + projectName + ")'s src folder could not be renamed\n" )
+
+    fs::rename( repositoryName + "/res/" + projectName, repositoryName + "/res/" + newName, error );
+    ERROR_IF( error, "Project (" + projectName + ")'s res folder could not be renamed\n" )
+
+    if ( settingsJson["projects"][newName]["vcpkg"] )
+    {
+        fs::rename( configPath + "/" + projectName, configPath + "/" + newName, error );
+        ERROR_IF( error, "Project (" + projectName + ")'s config folder could not be renamed\n" )
+    }
+
+    if ( settingsJson["projects"][newName]["lib"] == false )
+    {
+        std::string projectNameLowerCase = projectName;
+        std::string newNameLowerCase = newName;
+        std::transform( projectNameLowerCase.begin(), projectNameLowerCase.end(), projectNameLowerCase.begin(), [](unsigned char const c){ return std::tolower(c); } );
+        std::transform( newNameLowerCase.begin(), newNameLowerCase.end(), newNameLowerCase.begin(), [](unsigned char const c){ return std::tolower(c); } );
+        
+        ERROR_IF( fs::remove( repositoryName + "/bin/make-" + projectNameLowerCase + ".bat" ) == false, "Project (" + projectName + ")'s make.bat could not be deleted\n" )
+        ERROR_IF( fs::remove( repositoryName + "/bin/make-" + projectNameLowerCase + "-clear.bat" ) == false, "Project (" + projectName + ")'s make-clear.bat could not be deleted\n" )
+
+        CHECK_FOR_ERROR( CreateBats( repositoryName, newName ) )
+    }
+
+    std::ofstream settingsFileWrite( settingsPath );
+    settingsFileWrite << std::setw(4) << settingsJson;
+    settingsFileWrite.close();
+
+    std::cout << FG_SUCCESS "Project (" + projectName + ") was renamed " + newName + " successfully\n" STYLE_RESET;
 
     return 0;
 }
@@ -330,7 +448,7 @@ int CreateBats( std::string const& repositoryName,
     std::ofstream makeFileWrite( repositoryName + "/bin/make-" + projectNameLowerCase + ".bat" );
     makeFileWrite <<
         "cd ../.."                                                "\n"
-        "SolutionGen.exe -make " + repositoryName + " " + projectName;
+        "SolutionGenerator.exe -make " + repositoryName + " " + projectName;
     makeFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make-" + projectNameLowerCase + ".bat created successfully\n" STYLE_RESET;
@@ -338,7 +456,7 @@ int CreateBats( std::string const& repositoryName,
     std::ofstream makeClearFileWrite( repositoryName + "/bin/make-" + projectNameLowerCase + "-clear.bat" );
     makeClearFileWrite <<
         "cd ../.."                                                           "\n"
-        "SolutionGen.exe -make " + repositoryName + " " + projectName + " -clear";
+        "SolutionGenerator.exe -make " + repositoryName + " " + projectName + " -clear";
     makeClearFileWrite.close();
 
     std::cout << FG_SUBSUCCESS "make-" + projectNameLowerCase + "-clear.bat created successfully\n" STYLE_RESET;
@@ -837,7 +955,7 @@ int AddPortVcpkg( nlohmann::json& settingsJson,
 
     for ( auto const& existingPort : vcpkgJson["dependencies"] )
         ERROR_IF( static_cast<std::string>( existingPort ) == port,
-                  "Port (" + port + ") is already added to project (" + projectName + ")" )
+                  "Port (" + port + ") is already added to project (" + projectName + ")\n" )
 
     vcpkgJson["dependencies"].push_back( port );
 
@@ -977,7 +1095,8 @@ int MakeSolution( std::string const& repositoryName,
     
     std::cout << FG_SUCCESS "Solution (" + solutionName + ") made (-make) successfully\n" STYLE_RESET;
 
-    if ( open ) ShellExecuteA( nullptr, "open", fs::absolute( repositoryName + "/ide" ).string().c_str(), nullptr, nullptr, SW_SHOWNORMAL );
+    // if ( open )
+    //     ShellExecuteA( nullptr, "open", fs::absolute( repositoryName + "/ide" ).string().c_str(), nullptr, nullptr, SW_SHOWNORMAL );
 
     return 0;
 }
@@ -1032,22 +1151,45 @@ int MakeProject( std::string const& repositoryName,
     std::string const& guid = settingsJson["projects"][projectName]["guid"];
 
     bool const pch = settingsJson["projects"][projectName]["pch"];
-    std::string const precompiledHeader = pch ? "Use" : "NotUsing";
-
     bool const vcpkg = settingsJson["projects"][projectName]["vcpkg"];
-    std::string const vcpkgEnabled = vcpkg ? "true" : "false";
-
     bool const lib = settingsJson["projects"][projectName]["lib"];
-    std::string const configurationType = lib ? "StaticLibrary" : "Application";
-
     bool const window = settingsJson["projects"][projectName]["window"];
-    std::string const preprocessorDefinitions = window ? ( lib ? "LIB" : "WINDOWS" ) : "CONSOLE";
+    bool const bCopyLocalProjectReference = settingsJson["projects"][projectName]["CopyLocalProjectReference"];
+    bool const bCopyLocalDebugSymbols = settingsJson["projects"][projectName]["CopyLocalDebugSymbols"];
+    
+    std::string const precompiledHeader = pch ? "Use" : "NotUsing";
+    std::string const vcpkgEnabled = vcpkg ? "true" : "false";
+    std::string const configurationType = lib ? "StaticLibrary" : "Application";
+    std::string preprocessorDefinitions = window ? ( lib ? "_LIB;" : "_WINDOWS;" ) : "_CONSOLE;";
     std::string const subSystem = window ? "Windows" : "Console";
+    std::string const copyLocalProjectReference = bCopyLocalProjectReference ? "true" : "false";
+    std::string const copyLocalDebugSymbols = bCopyLocalDebugSymbols ? "true" : "false";
 
     std::string additionalIncludeDirectories;
     std::string additionalLibraryDirectories;
     std::string additionalDependencies;
+    std::string additionalOptions;
     std::string projectReferences;
+    
+    std::vector<std::string> const& preprocessorDefinitionsList = settingsJson["projects"][projectName]["preprocessorDefinitions"];
+    for ( std::string const& preprocessorDefinition : preprocessorDefinitionsList )
+        preprocessorDefinitions += preprocessorDefinition + ";";
+
+    std::vector<std::string> const& additionalIncludeDirectoriesList = settingsJson["projects"][projectName]["additionalIncludeDirectories"];
+    for ( std::string const& additionalIncludeDirectory : additionalIncludeDirectoriesList )
+        additionalIncludeDirectories += additionalIncludeDirectory + ";";
+
+    std::vector<std::string> const& additionalLibraryDirectoriesList = settingsJson["projects"][projectName]["additionalLibraryDirectories"];
+    for ( std::string const& additionalLibraryDirectory : additionalLibraryDirectoriesList )
+        additionalLibraryDirectories += additionalLibraryDirectory + ";";
+
+    std::vector<std::string> const& additionalDependenciesList = settingsJson["projects"][projectName]["additionalDependencies"];
+    for ( std::string const& additionalDependency : additionalDependenciesList )
+        additionalDependencies += additionalDependency + ";";
+    
+    std::vector<std::string> const& additionalOptionsList = settingsJson["projects"][projectName]["additionalOptions"];
+        for ( std::string const& additionalOption : additionalOptionsList )
+            additionalOptions += additionalOption + " ";
 
     for ( nlohmann::json const& dependency : settingsJson["projects"][projectName]["dependencies"] )
     {
@@ -1096,7 +1238,11 @@ int MakeProject( std::string const& repositoryName,
         clCompiles,
         images,
         nones,
-        projectReferences );
+        projectReferences,
+        copyLocalProjectReference,
+        copyLocalDebugSymbols,
+        additionalOptions
+        );
     vcxprojFileWrite.close();
     
     std::cout << FG_SUBSUCCESS + projectName + ".vcxproj created successfully\n" STYLE_RESET;
