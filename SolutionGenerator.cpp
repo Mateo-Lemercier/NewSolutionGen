@@ -1076,7 +1076,7 @@ int MakeProject( std::string const& repositoryName,
     std::string imagesFilters;
     std::string nonesFilters;
 
-    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\res\\", projectName, images, nones, imagesFilters, nonesFilters ) )
+    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\res", "", images, nones, imagesFilters, nonesFilters))
 
     std::string const vcxprojPath = ideProjectPath + "/" + projectName + ".vcxproj";
     
