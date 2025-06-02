@@ -1143,7 +1143,7 @@ int MakeProject( std::string const& repositoryName,
     bool const lib = settingsJson["projects"][projectName]["lib"];
     bool const window = settingsJson["projects"][projectName]["window"];
 
-    std::string const precompiledHeader = pch ? "Use" : "NotUsing";
+    std::string const precompiledHeader = pch ? "Create" : "NotUsing";
     std::string const vcpkgEnabled = vcpkg ? "true" : "false";
     std::string const configurationType = lib ? "StaticLibrary" : "Application";
     std::string preprocessorDefinitions = window ? ( lib ? "_LIB;" : "_WINDOWS;" ) : "_CONSOLE;";
@@ -1193,11 +1193,14 @@ int MakeProject( std::string const& repositoryName,
     CHECK_FOR_ERROR( AddSrcToVcxproj( repositoryName + "\\src\\", projectName, clIncludes, clCompiles, clIncludesFilters, clCompilesFilters ) )
     
     std::string images;
+    std::string shaders;
     std::string nones;
     std::string imagesFilters;
     std::string nonesFilters;
 
-    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\res\\", projectName, images, nones, imagesFilters, nonesFilters ) )
+    if ( fs::exists( repositoryName + "/src/" + projectName + ".txt" ) ) nones += "        <None Include=\"$(SolutionDir)..\\src\\" + projectName + ".txt\" />\n";
+
+    CHECK_FOR_ERROR( AddResToVcxproj( repositoryName + "\\res\\", projectName, images, shaders, nones, imagesFilters, nonesFilters ) )
 
     std::string const vcxprojPath = ideProjectPath + "/" + projectName + ".vcxproj";
     
@@ -1216,6 +1219,7 @@ int MakeProject( std::string const& repositoryName,
         clIncludes,
         clCompiles,
         images,
+        shaders,
         nones,
         projectReferences );
     vcxprojFileWrite.close();
@@ -1298,6 +1302,7 @@ int AddSrcToVcxproj( std::string const& srcPath,
 int AddResToVcxproj( std::string const& resPath,
                      std::string const& subFolder,
                      std::string& images,
+                     std::string& shaders,
                      std::string& nones,
                      std::string& imagesFilters,
                      std::string& nonesFilters )
@@ -1310,7 +1315,7 @@ int AddResToVcxproj( std::string const& resPath,
     {
         if ( entry.is_directory() )
         {
-            AddResToVcxproj( resPath, subFolder + "\\" + entry.path().filename().string(), images, nones, imagesFilters, nonesFilters );
+            AddResToVcxproj( resPath, subFolder + "\\" + entry.path().filename().string(), images, shaders, nones, imagesFilters, nonesFilters );
             continue;
         }
 
@@ -1331,6 +1336,17 @@ int AddResToVcxproj( std::string const& resPath,
                 "        <Image Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\">"                                                                          "\n"
                 "            <Filter>Images</Filter>"                                                                                                                                                     "\n"
                 "        </Image>"                                                                                                                                                                        "\n";
+        }
+
+        else if ( fileExtension == ".hlsl" ||
+                  fileExtension == ".ps" ||
+                  fileExtension == ".vs" ||
+                  fileExtension == ".glsl" ||
+                  fileExtension == ".frag" ||
+                  fileExtension == ".vert" ||
+                  fileExtension == ".shader" )
+        {
+            shaders += "        <FxCompile Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
         }
 
         else

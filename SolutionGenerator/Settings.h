@@ -331,7 +331,7 @@
 
 
 
-#define VCXPROJ( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies, clIncludes, clCompiles, images, nones, projectReferences ) (\
+#define VCXPROJ( guid, configurationType, vcpkgEnabled, projectName, preprocessorDefinitions, precompiledHeader, additionalIncludeDirectories, subSystem, additionalLibraryDirectories, additionalDependencies, clIncludes, clCompiles, images, shaders, nones, projectReferences ) (\
     "<?xml version=\"1.0\" encoding=\"utf-8\"?>"                                                                                                                                                                        "\n"\
     "<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">"                                                                                                                  "\n"\
     "    <ItemGroup Label=\"ProjectConfigurations\">"                                                                                                                                                                   "\n"\
@@ -443,6 +443,10 @@
     "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
     "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
     "        </Link>"                                                                                                                                                                                                   "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
+    "            <ObjectFileOutput>$(SolutionDir)../res/Shaders/%(Filename).cso</ObjectFileOutput>"                                                                                                                     "\n"\
+    "            <ShaderModel>6.0</ShaderModel>"                                                                                                                                                                        "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
     "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
     "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">"                                                                                                                           "\n"\
     "        <ClCompile>"                                                                                                                                                                                               "\n"\
@@ -465,6 +469,10 @@
     "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
     "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
     "        </Link>"                                                                                                                                                                                                   "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
+    "            <ObjectFileOutput>$(SolutionDir)../res/Shaders/%(Filename).cso</ObjectFileOutput>"                                                                                                                     "\n"\
+    "            <ShaderModel>6.0</ShaderModel>"                                                                                                                                                                        "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
     "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
     "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">"                                                                                                                               "\n"\
     "        <ClCompile>"                                                                                                                                                                                               "\n"\
@@ -483,6 +491,10 @@
     "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
     "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
     "        </Link>"                                                                                                                                                                                                   "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
+    "            <ObjectFileOutput>$(SolutionDir)../res/Shaders/%(Filename).cso</ObjectFileOutput>"                                                                                                                     "\n"\
+    "            <ShaderModel>6.0</ShaderModel>"                                                                                                                                                                        "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
     "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
     "    <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">"                                                                                                                             "\n"\
     "        <ClCompile>"                                                                                                                                                                                               "\n"\
@@ -505,6 +517,10 @@
     "            <AdditionalLibraryDirectories>" + (additionalLibraryDirectories) + "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>"                                                                    "\n"\
     "            <AdditionalDependencies>" + (additionalDependencies) + "%(AdditionalDependencies)</AdditionalDependencies>"                                                                                            "\n"\
     "        </Link>"                                                                                                                                                                                                   "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
+    "            <ObjectFileOutput>$(SolutionDir)../res/Shaders/%(Filename).cso</ObjectFileOutput>"                                                                                                                     "\n"\
+    "            <ShaderModel>6.0</ShaderModel>"                                                                                                                                                                        "\n"\
+    "        <FxCompile>"                                                                                                                                                                                               "\n"\
     "    </ItemDefinitionGroup>"                                                                                                                                                                                        "\n"\
     "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
     + (clIncludes) +                                                                                                                                                                                                        \
@@ -514,6 +530,9 @@
     "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
     "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
     + (images) +                                                                                                                                                                                                            \
+    "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
+    "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
+    + (shaders) +                                                                                                                                                                                                            \
     "    </ItemGroup>"                                                                                                                                                                                                  "\n"\
     "    <ItemGroup>"                                                                                                                                                                                                   "\n"\
     + (nones) +                                                                                                                                                                                                             \

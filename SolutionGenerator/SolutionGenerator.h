@@ -162,6 +162,7 @@ int AddSrcToVcxproj( std::string const& srcPath,
 int AddResToVcxproj( std::string const& resPath,
                      std::string const& subFolder,
                      std::string& images,
+                     std::string& shaders,
                      std::string& nones,
                      std::string& imagesFilters,
                      std::string& nonesFilters );

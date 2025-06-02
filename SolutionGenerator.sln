@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SolutionGenerator", "SolutionGenerator\SolutionGenerator.vcxproj", "{FCE2EF95-FE46-4B2C-818B-9125F243EDDC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetKeyID", "GetKeyID\GetKeyID.vcxproj", "{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SolutionGen", "SolutionGen\SolutionGen.vcxproj", "{196E8625-D616-4379-823C-4BD689FAF39A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -18,5 +22,21 @@ Global
 		{FCE2EF95-FE46-4B2C-818B-9125F243EDDC}.Release|Win32.Build.0 = Release|Win32
 		{FCE2EF95-FE46-4B2C-818B-9125F243EDDC}.Release|x64.ActiveCfg = Release|x64
 		{FCE2EF95-FE46-4B2C-818B-9125F243EDDC}.Release|x64.Build.0 = Release|x64
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Debug|Win32.Build.0 = Debug|Win32
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Debug|x64.ActiveCfg = Debug|x64
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Debug|x64.Build.0 = Debug|x64
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Release|Win32.ActiveCfg = Release|Win32
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Release|Win32.Build.0 = Release|Win32
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Release|x64.ActiveCfg = Release|x64
+		{2F3F979A-0C03-4A32-8AC3-A6B00B38482D}.Release|x64.Build.0 = Release|x64
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Debug|Win32.Build.0 = Debug|Win32
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Debug|x64.ActiveCfg = Debug|x64
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Debug|x64.Build.0 = Debug|x64
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Release|Win32.ActiveCfg = Release|Win32
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Release|Win32.Build.0 = Release|Win32
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Release|x64.ActiveCfg = Release|x64
+		{196E8625-D616-4379-823C-4BD689FAF39A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 EndGlobal
