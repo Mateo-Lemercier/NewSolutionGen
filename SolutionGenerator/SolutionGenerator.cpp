@@ -1346,7 +1346,19 @@ int AddResToVcxproj( std::string const& resPath,
                   fileExtension == ".vert" ||
                   fileExtension == ".shader" )
         {
-            shaders += "        <FxCompile Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\" />"                                                             "\n";
+            std::ifstream shader( entry.path().string() );
+            std::string firstLine;
+            std::getline( shader, firstLine );
+            shader.close();
+            shaders += "        <FxCompile Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\">"                                                               "\n";
+            if ( firstLine == "// CS" ) shaders += "            <ShaderType>Compute</ShaderType>"                                                                                                         "\n";
+            else if ( firstLine == "// PS" ) shaders += "            <ShaderType>Pixel</ShaderType>"                                                                                                      "\n";
+            else if ( firstLine == "// VS" ) shaders += "            <ShaderType>Vertex</ShaderType>"                                                                                                     "\n";
+            else if ( firstLine == "// ROOTSIG" ) shaders +=
+                "            <EntryPointName>ROOTSIG</EntryPointName>"                                                                                                                                    "\n"
+                "            <ShaderType>RootSignature</ShaderType>"                                                                                                                                      "\n"
+                "            <ShaderModel>RootSignature</ShaderModel>"                                                                                                                                    "\n";
+            shaders += "        </FxCompile>"                                                                                                                                                             "\n";
         }
 
         else
