@@ -1338,23 +1338,20 @@ int AddResToVcxproj( std::string const& resPath,
                 "        </Image>"                                                                                                                                                                        "\n";
         }
 
-        else if ( fileExtension == ".hlsl" ||
-                  fileExtension == ".ps" ||
-                  fileExtension == ".vs" ||
-                  fileExtension == ".glsl" ||
-                  fileExtension == ".frag" ||
-                  fileExtension == ".vert" ||
-                  fileExtension == ".shader" )
+        else if ( fileExtension == ".hlsl" )
         {
-            std::ifstream shader( entry.path().string() );
-            std::string firstLine;
-            std::getline( shader, firstLine );
-            shader.close();
+            std::string const& stem = entry.path().stem().string();
+            std::string const& shaderType = stem.substr( stem.size()-3, 3 );
             shaders += "        <FxCompile Include=\"$(SolutionDir)..\\res\\" + subFolder + "\\" + entry.path().filename().string() + "\">"                                                               "\n";
-            if      ( firstLine == "// CS" )      shaders += "            <ShaderType>Compute</ShaderType>"                                                                                               "\n";
-            else if ( firstLine == "// PS" )      shaders += "            <ShaderType>Pixel</ShaderType>"                                                                                                 "\n";
-            else if ( firstLine == "// VS" )      shaders += "            <ShaderType>Vertex</ShaderType>"                                                                                                "\n";
-            else if ( firstLine == "// ROOTSIG" ) shaders +=
+            if      ( shaderType == ".vs" )      shaders += "            <ShaderType>Vertex</ShaderType>"                                                                                                  "\n";
+            else if ( shaderType == ".ps" )      shaders += "            <ShaderType>Pixel</ShaderType>"                                                                                                   "\n";
+            else if ( shaderType == ".gs" )      shaders += "            <ShaderType>Geometry</ShaderType>"                                                                                                "\n";
+            else if ( shaderType == ".hs" )      shaders += "            <ShaderType>Hull</ShaderType>"                                                                                                    "\n";
+            else if ( shaderType == ".ds" )      shaders += "            <ShaderType>Domain</ShaderType>"                                                                                                  "\n";
+            else if ( shaderType == ".cs" )      shaders += "            <ShaderType>Compute</ShaderType>"                                                                                                 "\n";
+            else if ( shaderType == ".ms" )      shaders += "            <ShaderType>Mesh</ShaderType>"                                                                                                    "\n";
+            else if ( shaderType == ".as" )      shaders += "            <ShaderType>Amplification</ShaderType>"                                                                                           "\n";
+            else if ( shaderType == ".rs" )      shaders +=
                 "            <EntryPointName>ROOTSIG</EntryPointName>"                                                                                                                                    "\n"
                 "            <ShaderType>RootSignature</ShaderType>"                                                                                                                                      "\n"
                 "            <ShaderModel>rootsig_1.1</ShaderModel>"                                                                                                                                      "\n";
